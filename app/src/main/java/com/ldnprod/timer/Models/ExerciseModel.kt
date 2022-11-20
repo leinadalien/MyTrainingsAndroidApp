@@ -1,5 +1,5 @@
 package com.ldnprod.timer.Models
 
-class TaskModel (
+class ExerciseModel (
     val title: String
         )

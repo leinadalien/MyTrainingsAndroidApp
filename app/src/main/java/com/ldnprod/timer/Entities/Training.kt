@@ -5,8 +5,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 
-@Entity(tableName = "sequences")
-class SequenceEntity (
+@Entity(tableName = "trainings")
+class Training (
     @PrimaryKey(autoGenerate = true)
     @ColumnInfo(name = "title") var string: String,
 

@@ -4,12 +4,12 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.ldnprod.timer.Entities.TaskEntity
+import com.ldnprod.timer.Entities.Exercise
 
-@Database(entities = [TaskEntity::class, SequenceDao::class], version = 1)
+@Database(entities = [Exercise::class, TrainingDao::class], version = 1)
 abstract class AppDatabase: RoomDatabase() {
-    abstract fun sequenceDao(): SequenceDao
-    abstract fun taskDao(): TaskDao
+    abstract val trainingDao: TrainingDao
+    abstract val exerciseDao: ExerciseDao
     companion object{
         private var INSTANCE: AppDatabase? = null
         fun getInstance(context: Context):AppDatabase{
