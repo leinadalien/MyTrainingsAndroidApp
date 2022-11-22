@@ -10,21 +10,4 @@ import com.ldnprod.timer.Entities.Exercise
 abstract class AppDatabase: RoomDatabase() {
     abstract val trainingDao: TrainingDao
     abstract val exerciseDao: ExerciseDao
-    companion object{
-        private var INSTANCE: AppDatabase? = null
-        fun getInstance(context: Context):AppDatabase{
-            synchronized(this) {
-                var instance = INSTANCE
-                if (instance == null) {
-                    instance = Room.databaseBuilder(
-                        context.applicationContext,
-                        AppDatabase::class.java,
-                        "database"
-                    ).build()
-                }
-                return instance
-            }
-        }
-
-    }
 }
