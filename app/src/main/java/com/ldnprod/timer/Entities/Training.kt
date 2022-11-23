@@ -6,8 +6,8 @@ import androidx.room.PrimaryKey
 
 
 @Entity(tableName = "trainings")
-class Training (
-    @PrimaryKey(autoGenerate = true)
+data class Training (
+    @PrimaryKey(autoGenerate = true) var id: Int,
     @ColumnInfo(name = "title") var string: String,
 
 )
