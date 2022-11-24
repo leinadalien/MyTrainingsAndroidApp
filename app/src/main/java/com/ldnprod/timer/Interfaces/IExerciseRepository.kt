@@ -1,7 +1,7 @@
 package com.ldnprod.timer.Interfaces
 
-import com.ldnprod.timer.Dao.TrainingWithExercise
 import com.ldnprod.timer.Entities.Exercise
+import com.ldnprod.timer.Entities.Training
 
 interface IExerciseRepository {
     fun insert(exercise: Exercise)
@@ -12,7 +12,5 @@ interface IExerciseRepository {
 
     fun getAll(): List<Exercise>
 
-    fun getAllExercisesInTraining(trainingId: Int): List<Exercise>
-
-    fun getExerciseWithTraining(): List<TrainingWithExercise>
+    fun getAllInTraining(training: Training): List<Exercise>
 }

@@ -1,8 +1,8 @@
 package com.ldnprod.timer.Implementations
 
 import com.ldnprod.timer.Dao.ExerciseDao
-import com.ldnprod.timer.Dao.TrainingWithExercise
 import com.ldnprod.timer.Entities.Exercise
+import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.Interfaces.IExerciseRepository
 
 class ExerciseRepository(
@@ -25,11 +25,7 @@ class ExerciseRepository(
         return dao.getAll()
     }
 
-    override fun getAllExercisesInTraining(trainingId: Int): List<Exercise> {
-        return dao.getAllExercisesInTraining(trainingId)
-    }
-
-    override fun getExerciseWithTraining(): List<TrainingWithExercise> {
-        return dao.getTrainingWithExercises()
+    override fun getAllInTraining(training: Training): List<Exercise> {
+        return dao.getAllInTraining(training.id)
     }
 }

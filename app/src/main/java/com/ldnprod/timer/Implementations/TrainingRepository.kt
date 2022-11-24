@@ -1,6 +1,7 @@
 package com.ldnprod.timer.Implementations
 
 import com.ldnprod.timer.Dao.TrainingDao
+import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.Interfaces.ITrainingRepository
 
@@ -19,6 +20,10 @@ class TrainingRepository(private val dao:TrainingDao): ITrainingRepository {
 
     override fun getAll(): List<Training> {
         return dao.getAll()
+    }
+
+    override fun getAllTrainingsWithExercises(): Map<Training, List<Exercise>> {
+        return dao.getTrainingsWithExercises()
     }
 
 }
