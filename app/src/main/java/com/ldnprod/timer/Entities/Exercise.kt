@@ -9,6 +9,7 @@ data class Exercise (
         @PrimaryKey(autoGenerate = true) var id: Int,
         @ColumnInfo(name = "duration") var duration: Int,
         @ColumnInfo(name = "description") var description: String,
+        @ColumnInfo(name = "repeats") var repeats: Int = 1,
         @ColumnInfo(name = "training_id") val trainingId: Int,
         @ColumnInfo(name = "previous_exercise_id") var previousExerciseId: Int?,
         @ColumnInfo(name = "next_exercise_id") var nextExerciseId: Int?,

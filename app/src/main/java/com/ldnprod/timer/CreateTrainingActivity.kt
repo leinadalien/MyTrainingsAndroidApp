@@ -7,6 +7,7 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.ldnprod.timer.Adapters.ExerciseAdapter
 import com.ldnprod.timer.Models.ExerciseModel
 import com.ldnprod.timer.databinding.ActivityCreateTrainingBinding
 
