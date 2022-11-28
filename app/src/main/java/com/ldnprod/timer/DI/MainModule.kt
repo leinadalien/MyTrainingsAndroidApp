@@ -1,7 +1,6 @@
 package com.ldnprod.timer.DI
 
 import android.app.Application
-import android.content.Context
 import androidx.room.Room
 import com.ldnprod.timer.Dao.AppDatabase
 import com.ldnprod.timer.Implementations.ExerciseRepository

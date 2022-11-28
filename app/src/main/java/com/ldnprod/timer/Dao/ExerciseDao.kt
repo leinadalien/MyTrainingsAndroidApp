@@ -1,21 +1,22 @@
 package com.ldnprod.timer.Dao
+import androidx.lifecycle.LiveData
 import androidx.room.*
 import com.ldnprod.timer.Entities.Exercise
 
 @Dao
 interface ExerciseDao {
     @Insert
-    fun insert(exercise: Exercise)
+    suspend fun insert(exercise: Exercise)
 
     @Delete
-    fun delete(exercise: Exercise)
+    suspend fun delete(exercise: Exercise)
 
     @Update
-    fun update(exercise: Exercise)
+    suspend fun update(exercise: Exercise)
 
     @Query("SELECT * FROM exercises")
-    fun getAll(): List<Exercise>
+    suspend fun getAll(): LiveData<List<Exercise>>
 
     @Query("SELECT * FROM exercises WHERE training_id =:trainingId")
-    fun getAllInTraining(trainingId: Int): List<Exercise>
+    suspend fun getAllInTraining(trainingId: Int): LiveData<List<Exercise>>
 }

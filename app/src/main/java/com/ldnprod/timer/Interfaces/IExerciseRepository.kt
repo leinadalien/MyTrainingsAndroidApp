@@ -1,16 +1,17 @@
 package com.ldnprod.timer.Interfaces
 
+import androidx.lifecycle.LiveData
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
 
 interface IExerciseRepository {
-    fun insert(exercise: Exercise)
+    suspend fun insert(exercise: Exercise)
 
-    fun delete(exercise: Exercise)
+    suspend fun delete(exercise: Exercise)
 
-    fun update(exercise: Exercise)
+    suspend fun update(exercise: Exercise)
 
-    fun getAll(): List<Exercise>
+    suspend fun getAll(): LiveData<List<Exercise>>
 
-    fun getAllInTraining(training: Training): List<Exercise>
+    suspend fun getAllInTraining(training: Training): LiveData<List<Exercise>>
 }
