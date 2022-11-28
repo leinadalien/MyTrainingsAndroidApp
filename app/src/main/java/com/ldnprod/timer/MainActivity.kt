@@ -4,6 +4,8 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import com.ldnprod.timer.Adapters.TrainingAdapter
 import com.ldnprod.timer.DI.MainModule
 import com.ldnprod.timer.Dao.AppDatabase
@@ -16,6 +18,7 @@ import com.ldnprod.timer.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -26,7 +29,9 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         var adapter: TrainingAdapter
-        viewModel.trainings.job.invokeOnCompletion { adapter = TrainingAdapter(it as List<Training>) }
+        viewModel.trainings.observe(this as LifecycleOwner) {
+            adapter = TrainingAdapter(it)
+        }
         binding.createButton.setOnClickListener {
             val intent = Intent(this, CreateTrainingActivity::class.java)
             startActivity(intent)

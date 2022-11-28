@@ -15,8 +15,8 @@ interface ExerciseDao {
     suspend fun update(exercise: Exercise)
 
     @Query("SELECT * FROM exercises")
-    suspend fun getAll(): LiveData<List<Exercise>>
+    fun getAll(): LiveData<List<Exercise>>
 
     @Query("SELECT * FROM exercises WHERE training_id =:trainingId")
-    suspend fun getAllInTraining(trainingId: Int): LiveData<List<Exercise>>
+    fun getAllInTraining(trainingId: Int): LiveData<List<Exercise>>
 }

@@ -19,11 +19,11 @@ class TrainingRepository(private val dao:TrainingDao): ITrainingRepository {
         dao.update(training)
     }
 
-    override suspend fun getAll(): LiveData<List<Training>> {
+    override fun getAll(): LiveData<List<Training>> {
         return dao.getAll()
     }
 
-    override suspend fun getAllTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>> {
+    override fun getAllTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>> {
         return dao.getTrainingsWithExercises()
     }
 

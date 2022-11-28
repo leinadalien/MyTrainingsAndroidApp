@@ -17,10 +17,10 @@ interface TrainingDao {
     suspend fun update(training: Training)
 
     @Query("SELECT * FROM trainings")
-    suspend fun getAll(): LiveData<List<Training>>
+    fun getAll(): LiveData<List<Training>>
 
     @Query(
         "SELECT * FROM trainings JOIN exercises ON trainings.id = training_id"
     )
-    suspend fun getTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>>
+    fun getTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>>
 }

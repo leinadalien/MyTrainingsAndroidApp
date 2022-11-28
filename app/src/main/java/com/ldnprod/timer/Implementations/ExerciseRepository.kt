@@ -22,11 +22,11 @@ class ExerciseRepository(
         dao.update(exercise)
     }
 
-    override suspend fun getAll(): LiveData<List<Exercise>> {
+    override fun getAll(): LiveData<List<Exercise>> {
         return dao.getAll()
     }
 
-    override suspend fun getAllInTraining(training: Training): LiveData<List<Exercise>> {
+    override fun getAllInTraining(training: Training): LiveData<List<Exercise>> {
         return dao.getAllInTraining(training.id)
     }
 }

@@ -11,7 +11,5 @@ import javax.inject.Inject
 class TrainingListViewModel @Inject constructor(
     private val repository: ITrainingRepository
 ): ViewModel() {
-    val trainings = viewModelScope.launch {
-        repository.getAll()
-    }
+    val trainings = repository.getAll()
 }
