@@ -10,7 +10,7 @@ data class Exercise (
         @ColumnInfo(name = "duration") var duration: Int,
         @ColumnInfo(name = "description") var description: String,
         @ColumnInfo(name = "repeats") var repeats: Int = 1,
-        @ColumnInfo(name = "training_id") val trainingId: Int,
+        @ColumnInfo(name = "training_id") var trainingId: Int,
         @ColumnInfo(name = "previous_exercise_id") var previousExerciseId: Int? = null,
         @ColumnInfo(name = "next_exercise_id") var nextExerciseId: Int? = null,
 )

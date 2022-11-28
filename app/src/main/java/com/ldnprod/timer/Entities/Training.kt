@@ -9,5 +9,5 @@ import androidx.room.PrimaryKey
 data class Training (
     @PrimaryKey(autoGenerate = true) var id: Int = 0,
     @ColumnInfo(name = "title") var title: String,
-    @ColumnInfo(name = "color") var color: Int
+    @ColumnInfo(name = "color") var color: Int = 0,
 )
