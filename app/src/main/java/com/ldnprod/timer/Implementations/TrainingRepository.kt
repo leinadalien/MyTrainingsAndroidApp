@@ -27,4 +27,8 @@ class TrainingRepository(private val dao:TrainingDao): ITrainingRepository {
         return dao.getTrainingsWithExercises()
     }
 
+    override fun getTrainingWithId(id: Int): LiveData<Training> {
+        return dao.getTrainingWithId(id)
+    }
+
 }

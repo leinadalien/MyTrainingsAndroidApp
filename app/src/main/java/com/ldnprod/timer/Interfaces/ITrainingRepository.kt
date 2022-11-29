@@ -16,4 +16,6 @@ interface ITrainingRepository {
     fun getAll():LiveData<List<Training>>
 
     fun getAllTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>>
+
+    fun getTrainingWithId(id: Int): LiveData<Training>
 }

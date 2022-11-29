@@ -12,14 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.ExerciseAdapter
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
-import com.ldnprod.timer.ViewModels.ExerciseListViewModel
+import com.ldnprod.timer.ViewModels.TrainingViewModel
 import com.ldnprod.timer.ViewModels.TrainingListViewModel
 import com.ldnprod.timer.databinding.ActivityCreateTrainingBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class CreateTrainingActivity : AppCompatActivity() {
-    private val exerciseListViewModel by viewModels<ExerciseListViewModel>()
+    private val trainingViewModel by viewModels<TrainingViewModel>()
     private val trainingListViewModel by viewModels<TrainingListViewModel>()
     private lateinit var binding: ActivityCreateTrainingBinding
     private lateinit var exerciseAdapter: ExerciseAdapter
@@ -62,7 +62,7 @@ class CreateTrainingActivity : AppCompatActivity() {
         trainingListViewModel.addTraining(training)
         exercises.forEach {
             it.trainingId = training.id
-            exerciseListViewModel.insertExercise(it)
+            trainingViewModel.insertExercise(it)
         }
     }
     private fun checkVisibilityDoneButton(){
