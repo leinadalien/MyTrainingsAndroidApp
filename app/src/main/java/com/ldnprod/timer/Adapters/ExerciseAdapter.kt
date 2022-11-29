@@ -1,5 +1,6 @@
 package com.ldnprod.timer.Adapters
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,8 +8,9 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.R
+import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModel
 
-class ExerciseAdapter(val exercises:List<Exercise>):RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
+class ExerciseAdapter(private val exercises: List<Exercise>):RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
     inner class ExerciseViewHolder(val view: View) : RecyclerView.ViewHolder(view){
         val title = view.findViewById<TextView>(R.id.exercise_title)
     }
@@ -27,6 +29,6 @@ class ExerciseAdapter(val exercises:List<Exercise>):RecyclerView.Adapter<Exercis
     }
 
     override fun getItemCount(): Int {
-        return exercises.size
+        return exercises.size ?: 0
     }
 }

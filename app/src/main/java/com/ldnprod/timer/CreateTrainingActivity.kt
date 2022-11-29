@@ -12,14 +12,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.ExerciseAdapter
 import com.ldnprod.timer.Entities.Exercise
-import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.Utils.TrainingEvent
-import com.ldnprod.timer.Utils.UIEvent
-import com.ldnprod.timer.ViewModels.TrainingViewModel
-import com.ldnprod.timer.ViewModels.TrainingListViewModel
+import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModel
+import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModelEvent
 import com.ldnprod.timer.databinding.ActivityCreateTrainingBinding
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -27,14 +24,14 @@ class CreateTrainingActivity : AppCompatActivity() {
     private val trainingViewModel by viewModels<TrainingViewModel>()
     private lateinit var binding: ActivityCreateTrainingBinding
     private lateinit var exerciseAdapter: ExerciseAdapter
-    private var exercises = ArrayList<Exercise>()
+    private lateinit var exercises: ArrayList<Exercise>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateTrainingBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        exercises = trainingViewModel.exercises as ArrayList<Exercise>
         exerciseAdapter = ExerciseAdapter(exercises)
         binding.createButton.setOnClickListener {
-            exerciseInfoDialog()
             trainingViewModel.onEvent(TrainingEvent.OnAddButtonClick)
         }
         binding.doneButton.setOnClickListener {
@@ -43,20 +40,34 @@ class CreateTrainingActivity : AppCompatActivity() {
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = exerciseAdapter
         lifecycleScope.launch {
-            trainingViewModel.uiEvent.collect { event ->
+            trainingViewModel.viewModelEvent.collect { event ->
                 when(event) {
-                    is UIEvent.ItemInserted -> {
+                    is TrainingViewModelEvent.ExerciseInserted -> {
+                        exercises.add(event.exercise)
                         exerciseAdapter.notifyItemInserted(event.position)
                     }
-                    is UIEvent.CloseActivity -> {
+                    is TrainingViewModelEvent.ExerciseMoved -> {
+                        exerciseAdapter.notifyItemMoved(event.fromPosition, event.toPosition)
+                    }
+                    is TrainingViewModelEvent.ExerciseRemoved -> {
+                        exerciseAdapter.notifyItemRemoved(event.position)
+                    }
+                    is TrainingViewModelEvent.ExerciseDataSetChanged -> {
+                        exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
+                        exerciseAdapter.notifyDataSetChanged()
+                    }
+                    is TrainingViewModelEvent.PopBackStack -> {
                         finish()
+                    }
+                    is TrainingViewModelEvent.CreateExercise -> {
+                        showExerciseInfoDialog()
                     }
                     else -> Unit
                 }
             }
         }
     }
-    private fun exerciseInfoDialog() {
+    private fun showExerciseInfoDialog() {
         val view = LayoutInflater.from(this).inflate(R.layout.add_exercise_dialog_layout, null)
         val dialog = AlertDialog.Builder(this)
         dialog.setView(view)
@@ -64,7 +75,7 @@ class CreateTrainingActivity : AppCompatActivity() {
                 dialog, _ ->
             val title = view.findViewById<EditText>(R.id.title_edittext).text.toString()
             val exercise = Exercise(description = title, duration = 10, trainingId = 0)
-            exercises.add(exercise)
+            trainingViewModel.addExercise(exercise)
             checkVisibilityDoneButton()
             Toast.makeText(this, "Successfully", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
@@ -79,6 +90,6 @@ class CreateTrainingActivity : AppCompatActivity() {
         dialog.show()
     }
     private fun checkVisibilityDoneButton(){
-        binding.doneButton.visibility = if (exercises.size > 0) View.VISIBLE else View.GONE
+        binding.doneButton.visibility = if (trainingViewModel.exercises.isNotEmpty()) View.VISIBLE else View.GONE
     }
 }

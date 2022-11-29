@@ -1,17 +1,11 @@
-package com.ldnprod.timer.ViewModels
+package com.ldnprod.timer.ViewModels.TrainingViewModel
 
-import android.widget.Toast
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.Interfaces.IExerciseRepository
 import com.ldnprod.timer.Interfaces.ITrainingRepository
 import com.ldnprod.timer.Utils.TrainingEvent
-import com.ldnprod.timer.Utils.UIEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -26,23 +20,32 @@ class TrainingViewModel @Inject constructor(
 ): ViewModel(){
     var training = MutableLiveData<Training?>(null)
         private set
-    var title = MutableLiveData<String>("")
+    var title = MutableLiveData("")
         private set
-    var exercises = training.value?.let { exerciseRepository.getAllInTraining(it) } ?: ArrayList()
-    private val _uiEvent = Channel<UIEvent> {  }
-    val uiEvent = _uiEvent.receiveAsFlow()
+    lateinit var exercises: List<Exercise>
+
+    fun addExercise(exercise: Exercise) {
+        viewModelScope.launch {
+            exerciseRepository.insert(exercise)
+        }
+        sendEventToUI(TrainingViewModelEvent.ExerciseInserted(exercises.size, exercise))
+    }
+    private val _viewModelEvent = Channel<TrainingViewModelEvent> {  }
+    val viewModelEvent = _viewModelEvent.receiveAsFlow()
 
     init {
-        val trainingId = savedStateHandle.get<Int>("trainingId")!!
+        val trainingId = savedStateHandle.get<Int>("trainingId")?: -1
         if (trainingId != -1) {
             viewModelScope.launch {
                 trainingRepository.getTrainingWithId(trainingId)?.let {
                     title.value = it.title
                     training.value = it
-                    exercises = trainingRepository.getAllTrainingsWithExercises()[it]!!
+                    exercises = trainingRepository.getAllTrainingsWithExercises()[it]?: ArrayList()
                 }
 
             }
+        } else {
+            exercises = ArrayList()
         }
     }
     fun onEvent(event: TrainingEvent) {
@@ -53,6 +56,7 @@ class TrainingViewModel @Inject constructor(
             is TrainingEvent.OnExerciseClick -> {
             }
             is TrainingEvent.OnAddButtonClick -> {
+                sendEventToUI(TrainingViewModelEvent.CreateExercise)
             }
             is TrainingEvent.OnDoneButtonClick -> {
                 viewModelScope.launch {
@@ -74,6 +78,8 @@ class TrainingViewModel @Inject constructor(
                                 exercises[order].trainingId = it.id
                                 exerciseRepository.insert(exercises[order])
                             }
+
+                            sendEventToUI(TrainingViewModelEvent.PopBackStack)
                         }
                     }
                 }
@@ -86,9 +92,9 @@ class TrainingViewModel @Inject constructor(
         }
     }
 
-    private fun sendUIEvent(event: UIEvent) {
+    private fun sendEventToUI(event: TrainingViewModelEvent) {
         viewModelScope.launch {
-            _uiEvent.send(event)
+            _viewModelEvent.send(event)
         }
     }
 }
