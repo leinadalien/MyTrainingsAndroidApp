@@ -1,13 +1,14 @@
 package com.ldnprod.timer.Dao
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.room.*
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
 
 @Dao
 interface TrainingDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(training: Training)
 
     @Delete
@@ -17,11 +18,11 @@ interface TrainingDao {
     suspend fun update(training: Training)
 
     @Query("SELECT * FROM trainings")
-    fun getAll(): LiveData<List<Training>>
+    fun getAll(): List<Training>
 
     @Query("SELECT * FROM trainings JOIN exercises ON trainings.id = training_id")
-    fun getTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>>
+    fun getTrainingsWithExercises(): Map<Training, List<Exercise>>
 
     @Query("SELECT * FROM trainings WHERE id =:id")
-    fun getTrainingWithId(id: Int): LiveData<Training>
+    fun getTrainingWithId(id: Int): Training?
 }

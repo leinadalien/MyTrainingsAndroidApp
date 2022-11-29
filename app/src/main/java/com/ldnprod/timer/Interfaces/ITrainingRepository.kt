@@ -13,9 +13,9 @@ interface ITrainingRepository {
 
     suspend fun update(training: Training)
 
-    fun getAll():LiveData<List<Training>>
+    fun getAll():List<Training>
 
-    fun getAllTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>>
+    fun getAllTrainingsWithExercises(): Map<Training, List<Exercise>>
 
-    fun getTrainingWithId(id: Int): LiveData<Training>
+    fun getTrainingWithId(id: Int): Training?
 }

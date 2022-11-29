@@ -1,6 +1,7 @@
 package com.ldnprod.timer.Implementations
 
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.ldnprod.timer.Dao.TrainingDao
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
@@ -19,15 +20,15 @@ class TrainingRepository(private val dao:TrainingDao): ITrainingRepository {
         dao.update(training)
     }
 
-    override fun getAll(): LiveData<List<Training>> {
+    override fun getAll(): List<Training> {
         return dao.getAll()
     }
 
-    override fun getAllTrainingsWithExercises(): LiveData<Map<Training, List<Exercise>>> {
+    override fun getAllTrainingsWithExercises(): Map<Training, List<Exercise>> {
         return dao.getTrainingsWithExercises()
     }
 
-    override fun getTrainingWithId(id: Int): LiveData<Training> {
+    override fun getTrainingWithId(id: Int): Training? {
         return dao.getTrainingWithId(id)
     }
 

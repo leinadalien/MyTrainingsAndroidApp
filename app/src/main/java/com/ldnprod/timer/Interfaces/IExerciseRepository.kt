@@ -11,7 +11,7 @@ interface IExerciseRepository {
 
     suspend fun update(exercise: Exercise)
 
-    fun getAll(): LiveData<List<Exercise>>
+    fun getAll(): List<Exercise>
 
-    fun getAllInTraining(training: Training): LiveData<List<Exercise>>
+    fun getAllInTraining(training: Training): List<Exercise>
 }
