@@ -8,13 +8,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.R
 
-class TrainingAdapter(private val trainings: List<Training>): RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
+class TrainingAdapter(var trainings: List<Training>): RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
     inner class TrainingViewHolder(val view: View) : RecyclerView.ViewHolder(view){
-        val title = view.findViewById<TextView>(R.id.exercise_title)
+        val title = view.findViewById<TextView>(R.id.training_title)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrainingViewHolder {
-        val view = LayoutInflater.from(parent.context).inflate(R.layout.exercise_thumbnail_layout, parent, false)
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.training_thumbnail_layout, parent, false)
         return TrainingViewHolder(view)
     }
 

@@ -4,6 +4,7 @@ package com.ldnprod.timer.Interfaces
 import androidx.lifecycle.LiveData
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
+import kotlinx.coroutines.flow.Flow
 
 interface ITrainingRepository {
 
@@ -13,7 +14,7 @@ interface ITrainingRepository {
 
     suspend fun update(training: Training)
 
-    fun getAll():List<Training>
+    fun getAll(): List<Training>
 
     fun getAllTrainingsWithExercises(): Map<Training, List<Exercise>>
 

@@ -1,10 +1,10 @@
 package com.ldnprod.timer.Dao
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.room.*
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TrainingDao {
