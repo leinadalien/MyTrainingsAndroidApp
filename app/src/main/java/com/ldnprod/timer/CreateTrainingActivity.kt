@@ -24,13 +24,11 @@ class CreateTrainingActivity : AppCompatActivity() {
     private val trainingViewModel by viewModels<TrainingViewModel>()
     private lateinit var binding: ActivityCreateTrainingBinding
     private lateinit var exerciseAdapter: ExerciseAdapter
-    private lateinit var exercises: ArrayList<Exercise>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCreateTrainingBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        exercises = trainingViewModel.exercises as ArrayList<Exercise>
-        exerciseAdapter = ExerciseAdapter(exercises)
+        exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
         binding.createButton.setOnClickListener {
             trainingViewModel.onEvent(TrainingEvent.OnAddButtonClick)
         }
@@ -43,7 +41,6 @@ class CreateTrainingActivity : AppCompatActivity() {
             trainingViewModel.viewModelEvent.collect { event ->
                 when(event) {
                     is TrainingViewModelEvent.ExerciseInserted -> {
-                        exercises.add(event.exercise)
                         exerciseAdapter.notifyItemInserted(event.position)
                     }
                     is TrainingViewModelEvent.ExerciseMoved -> {

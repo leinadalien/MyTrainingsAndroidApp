@@ -7,6 +7,7 @@ import com.ldnprod.timer.Interfaces.IExerciseRepository
 import com.ldnprod.timer.Interfaces.ITrainingRepository
 import com.ldnprod.timer.Utils.TrainingEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -17,30 +18,30 @@ class TrainingViewModel @Inject constructor(
     private val exerciseRepository: IExerciseRepository,
     private val trainingRepository: ITrainingRepository,
     savedStateHandle: SavedStateHandle
-): ViewModel(){
+) : ViewModel() {
     var training = MutableLiveData<Training?>(null)
         private set
     var title = MutableLiveData("")
         private set
-    lateinit var exercises: List<Exercise>
+    lateinit var exercises: ArrayList<Exercise>
 
     fun addExercise(exercise: Exercise) {
-        viewModelScope.launch {
-            exerciseRepository.insert(exercise)
-        }
+        exercises.add(exercise)
         sendEventToUI(TrainingViewModelEvent.ExerciseInserted(exercises.size, exercise))
     }
-    private val _viewModelEvent = Channel<TrainingViewModelEvent> {  }
+
+    private val _viewModelEvent = Channel<TrainingViewModelEvent> { }
     val viewModelEvent = _viewModelEvent.receiveAsFlow()
 
     init {
-        val trainingId = savedStateHandle.get<Int>("trainingId")?: -1
+        val trainingId = savedStateHandle.get<Int>("trainingId") ?: -1
         if (trainingId != -1) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 trainingRepository.getTrainingWithId(trainingId)?.let {
                     title.value = it.title
                     training.value = it
-                    exercises = trainingRepository.getAllTrainingsWithExercises()[it]?: ArrayList()
+                    exercises =
+                        trainingRepository.getAllTrainingsWithExercises()[it] as ArrayList<Exercise>
                 }
 
             }
@@ -48,8 +49,9 @@ class TrainingViewModel @Inject constructor(
             exercises = ArrayList()
         }
     }
+
     fun onEvent(event: TrainingEvent) {
-        when(event) {
+        when (event) {
             is TrainingEvent.OnTitleChanged -> {
                 title.value = event.title
             }
@@ -60,28 +62,42 @@ class TrainingViewModel @Inject constructor(
             }
             is TrainingEvent.OnDoneButtonClick -> {
                 viewModelScope.launch {
-                    if(!title.value.isNullOrBlank()) {
-                        training.value?.let {
-                            trainingRepository.insert(
-                                Training(
-                                    title = title.value!!,
-                                    id = it.id
-                                )
-                            )
-                            for (order in exercises.indices) {
-                                if (order > 0) {
-                                    exercises[order].previousExerciseId = exercises[order - 1].id
+                    title.value?.let { trainingTitle ->
+                        if (!trainingTitle.isBlank()) {
+                            training.value?.let {
+                                trainingRepository.insert(Training(title = trainingTitle, id = it.id))
+                                for(order in exercises.indices) {
+                                    if (order > 0) {
+                                        exercises[order].previousExerciseId =
+                                            exercises[order - 1].id
+                                    }
+                                    if (order < exercises.size - 1) {
+                                        exercises[order].nextExerciseId = exercises[order + 1].id
+                                    }
+                                    exercises[order].trainingId = it.id
+                                    exerciseRepository.insert(exercises[order])
                                 }
-                                if (order < exercises.size - 1) {
-                                    exercises[order].nextExerciseId = exercises[order + 1].id
+                            }?: run {
+                                training.value = Training(title = trainingTitle).also {
+                                    trainingRepository.insert(it)
+                                    for(order in exercises.indices) {
+                                        if (order > 0) {
+                                            exercises[order].previousExerciseId =
+                                                exercises[order - 1].id
+                                        }
+                                        if (order < exercises.size - 1) {
+                                            exercises[order].nextExerciseId = exercises[order + 1].id
+                                        }
+                                        exercises[order].trainingId = it.id
+                                        exerciseRepository.insert(exercises[order])
+                                    }
                                 }
-                                exercises[order].trainingId = it.id
-                                exerciseRepository.insert(exercises[order])
-                            }
 
-                            sendEventToUI(TrainingViewModelEvent.PopBackStack)
+                            }
                         }
+                        sendEventToUI(TrainingViewModelEvent.PopBackStack)
                     }
+
                 }
             }
             is TrainingEvent.OnDeleteExerciseClick -> {

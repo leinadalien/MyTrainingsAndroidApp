@@ -8,8 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.R
 
-class TrainingAdapter(private val trainings:List<Training>): RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
-    inner class TrainingViewHolder(private val view: View) : RecyclerView.ViewHolder(view){
+class TrainingAdapter(private val trainings: List<Training>): RecyclerView.Adapter<TrainingAdapter.TrainingViewHolder>() {
+    inner class TrainingViewHolder(val view: View) : RecyclerView.ViewHolder(view){
         val title = view.findViewById<TextView>(R.id.exercise_title)
     }
 

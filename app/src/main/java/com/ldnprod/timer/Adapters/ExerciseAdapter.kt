@@ -29,6 +29,6 @@ class ExerciseAdapter(private val exercises: List<Exercise>):RecyclerView.Adapte
     }
 
     override fun getItemCount(): Int {
-        return exercises.size ?: 0
+        return exercises.size
     }
 }

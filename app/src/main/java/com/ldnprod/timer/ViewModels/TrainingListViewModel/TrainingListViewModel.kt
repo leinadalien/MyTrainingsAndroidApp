@@ -6,6 +6,7 @@ import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.Interfaces.ITrainingRepository
 import com.ldnprod.timer.Utils.TrainingListEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
@@ -15,7 +16,7 @@ import javax.inject.Inject
 class TrainingListViewModel @Inject constructor(
     private val repository: ITrainingRepository
 ): ViewModel() {
-    val trainings = viewModelScope.launch { repository.getAll() }
+    lateinit var trainings: ArrayList<Training>
     fun addTraining(training: Training){
         viewModelScope.launch {
             repository.insert(training)
@@ -24,11 +25,18 @@ class TrainingListViewModel @Inject constructor(
 
     private val _viewModelEvent = Channel<TrainingListViewModelEvent> {  }
     val viewModelEvent = _viewModelEvent.receiveAsFlow()
+    init {
+        trainings = ArrayList()
+        viewModelScope.launch(Dispatchers.IO) {
+            trainings = repository.getAll() as ArrayList<Training>
+            sendEventToUI(TrainingListViewModelEvent.TrainingInserted(trainings.size))
+        }
 
+    }
     fun onEvent(event: TrainingListEvent) {
         when(event){
             is TrainingListEvent.OnTrainingClick ->{
-
+                sendEventToUI(TrainingListViewModelEvent.JumpToDetail)
             }
             else -> Unit
         }
