@@ -31,9 +31,6 @@ class TrainingListViewModel @Inject constructor(
     }
     fun onEvent(event: TrainingListEvent) {
         when(event){
-            is TrainingListEvent.OnTrainingClick -> {
-                sendEventToUI(TrainingListViewModelEvent.JumpToDetail)
-            }
             is TrainingListEvent.OnRequestUpdatesForList -> {
                 viewModelScope.launch(Dispatchers.IO) {
                     trainings.let{

@@ -8,5 +8,6 @@ sealed class TrainingEvent {
     data class OnExerciseClick(val exercise: Exercise): TrainingEvent()
     object OnAddButtonClick: TrainingEvent()
     object OnDoneButtonClick: TrainingEvent()
+    data class OnTrainingRequested(val id: Int):TrainingEvent()
 
 }

@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TrainingDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(training: Training)
+    suspend fun insert(training: Training) : Long
 
     @Delete
     suspend fun delete(training: Training)

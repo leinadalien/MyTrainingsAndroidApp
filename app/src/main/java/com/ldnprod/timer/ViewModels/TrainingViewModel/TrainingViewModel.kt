@@ -17,13 +17,14 @@ import javax.inject.Inject
 class TrainingViewModel @Inject constructor(
     private val exerciseRepository: IExerciseRepository,
     private val trainingRepository: ITrainingRepository,
-    savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-    var training = MutableLiveData<Training?>(null)
+    var training: Training? = null
         private set
-    var title = MutableLiveData("")
+    var title: String = ""
         private set
-    lateinit var exercises: ArrayList<Exercise>
+    var exercises = ArrayList<Exercise>()
+        private set
 
     fun addExercise(exercise: Exercise) {
         exercises.add(exercise)
@@ -38,22 +39,19 @@ class TrainingViewModel @Inject constructor(
         if (trainingId != -1) {
             viewModelScope.launch(Dispatchers.IO) {
                 trainingRepository.getTrainingWithId(trainingId)?.let {
-                    title.value = it.title
-                    training.value = it
-                    exercises =
-                        trainingRepository.getAllTrainingsWithExercises()[it] as ArrayList<Exercise>
+                    title = it.title
+                    training = it
                 }
-
+                exercises = exerciseRepository.getAllInTraining(training!!) as ArrayList<Exercise>
+                sendEventToUI(TrainingViewModelEvent.ExerciseSetChanged)
             }
-        } else {
-            exercises = ArrayList()
         }
     }
 
     fun onEvent(event: TrainingEvent) {
         when (event) {
             is TrainingEvent.OnTitleChanged -> {
-                title.value = event.title
+                title = event.title
             }
             is TrainingEvent.OnExerciseClick -> {
             }
@@ -62,14 +60,14 @@ class TrainingViewModel @Inject constructor(
             }
             is TrainingEvent.OnDoneButtonClick -> {
                 viewModelScope.launch {
-                    title.value?.let { trainingTitle ->
+                    title.let { trainingTitle ->
                         if (trainingTitle.isNotBlank()) {
-                            if (training.value == null) training.value = Training(title = trainingTitle)
-                            training.value?.let {
+                            if (training == null) training = Training(title = trainingTitle)
+                            training?.let {
                                 it.title = trainingTitle
-                                trainingRepository.insert(
+                                val trainingId = trainingRepository.insert(
                                     it
-                                )
+                                ).toInt()
                                 for (order in exercises.indices) {
                                     if (order > 0) {
                                         exercises[order].previousExerciseId =
@@ -78,7 +76,7 @@ class TrainingViewModel @Inject constructor(
                                     if (order < exercises.size - 1) {
                                         exercises[order].nextExerciseId = exercises[order + 1].id
                                     }
-                                    exercises[order].trainingId = it.id
+                                    exercises[order].trainingId = trainingId
                                     exerciseRepository.insert(exercises[order])
                                 }
                                 sendEventToUI(TrainingViewModelEvent.CloseDetailed(it))
@@ -92,6 +90,19 @@ class TrainingViewModel @Inject constructor(
                     exerciseRepository.delete(event.exercise)
                 }
             }
+            is TrainingEvent.OnTrainingRequested -> {
+                savedStateHandle["trainingId"] = event.id
+                viewModelScope.launch(Dispatchers.IO) {
+                    trainingRepository.getTrainingWithId(event.id)?.let {
+                        title = it.title
+                        training = it
+
+                    }
+                    exercises = exerciseRepository.getAllInTraining(training!!) as ArrayList<Exercise>
+                    sendEventToUI(TrainingViewModelEvent.ExerciseSetChanged)
+                }
+            }
+            else -> Unit
         }
     }
 

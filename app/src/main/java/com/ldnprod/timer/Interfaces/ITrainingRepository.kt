@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ITrainingRepository {
 
-    suspend fun insert(training: Training)
+    suspend fun insert(training: Training) : Long
 
     suspend fun delete(training: Training)
 

@@ -15,19 +15,23 @@ import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Utils.TrainingEvent
 import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModel
 import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModelEvent
-import com.ldnprod.timer.databinding.ActivityCreateTrainingBinding
+import com.ldnprod.timer.databinding.ActivityTrainingInfoBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class CreateTrainingActivity : AppCompatActivity() {
+class TrainingInfoActivity : AppCompatActivity() {
     private val trainingViewModel by viewModels<TrainingViewModel>()
-    private lateinit var binding: ActivityCreateTrainingBinding
+    private lateinit var binding: ActivityTrainingInfoBinding
     private lateinit var exerciseAdapter: ExerciseAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityCreateTrainingBinding.inflate(layoutInflater)
+        binding = ActivityTrainingInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        intent.extras?.let {
+            val id = it.getInt("trainingId")
+            trainingViewModel.onEvent(TrainingEvent.OnTrainingRequested(id))
+        }
         exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
         binding.apply {
             createButton.setOnClickListener {
@@ -41,9 +45,10 @@ class CreateTrainingActivity : AppCompatActivity() {
                     trainingViewModel.onEvent(TrainingEvent.OnTitleChanged(trainingTitleEdittext.text.toString()))
                 }
             }
-            recyclerView.layoutManager = LinearLayoutManager(this@CreateTrainingActivity)
+            recyclerView.layoutManager = LinearLayoutManager(this@TrainingInfoActivity)
             recyclerView.adapter = exerciseAdapter
         }
+
         lifecycleScope.launch {
             trainingViewModel.viewModelEvent.collect { event ->
                 when(event) {
@@ -56,8 +61,8 @@ class CreateTrainingActivity : AppCompatActivity() {
                     is TrainingViewModelEvent.ExerciseRemoved -> {
                         exerciseAdapter.notifyItemRemoved(event.position)
                     }
-                    is TrainingViewModelEvent.ExerciseDataSetChanged -> {
-                        exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
+                    is TrainingViewModelEvent.ExerciseSetChanged -> {
+                        exerciseAdapter.exercises = trainingViewModel.exercises
                         exerciseAdapter.notifyDataSetChanged()
                     }
                     is TrainingViewModelEvent.CloseDetailed -> {

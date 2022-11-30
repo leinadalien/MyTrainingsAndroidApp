@@ -10,7 +10,7 @@ import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.R
 import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModel
 
-class ExerciseAdapter(private val exercises: List<Exercise>):RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
+class ExerciseAdapter(var exercises: List<Exercise>):RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
     inner class ExerciseViewHolder(val view: View) : RecyclerView.ViewHolder(view){
         val title = view.findViewById<TextView>(R.id.exercise_title)
     }

@@ -7,8 +7,8 @@ import com.ldnprod.timer.Interfaces.ITrainingRepository
 import kotlinx.coroutines.flow.Flow
 
 class TrainingRepository(private val dao:TrainingDao): ITrainingRepository {
-    override suspend fun insert(training: Training) {
-        dao.insert(training)
+    override suspend fun insert(training: Training): Long {
+        return dao.insert(training)
     }
 
     override suspend fun delete(training: Training) {
