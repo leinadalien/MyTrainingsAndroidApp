@@ -54,4 +54,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    override fun onStart() {
+        super.onStart()
+        viewModel.onEvent(TrainingListEvent.OnRequestUpdatesForList)
+
+    }
 }

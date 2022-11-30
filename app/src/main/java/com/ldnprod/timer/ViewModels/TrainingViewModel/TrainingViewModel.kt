@@ -63,10 +63,14 @@ class TrainingViewModel @Inject constructor(
             is TrainingEvent.OnDoneButtonClick -> {
                 viewModelScope.launch {
                     title.value?.let { trainingTitle ->
-                        if (!trainingTitle.isBlank()) {
+                        if (trainingTitle.isNotBlank()) {
+                            if (training.value == null) training.value = Training(title = trainingTitle)
                             training.value?.let {
-                                trainingRepository.insert(Training(title = trainingTitle, id = it.id))
-                                for(order in exercises.indices) {
+                                it.title = trainingTitle
+                                trainingRepository.insert(
+                                    it
+                                )
+                                for (order in exercises.indices) {
                                     if (order > 0) {
                                         exercises[order].previousExerciseId =
                                             exercises[order - 1].id
@@ -77,27 +81,10 @@ class TrainingViewModel @Inject constructor(
                                     exercises[order].trainingId = it.id
                                     exerciseRepository.insert(exercises[order])
                                 }
-                            }?: run {
-                                training.value = Training(title = trainingTitle).also {
-                                    trainingRepository.insert(it)
-                                    for(order in exercises.indices) {
-                                        if (order > 0) {
-                                            exercises[order].previousExerciseId =
-                                                exercises[order - 1].id
-                                        }
-                                        if (order < exercises.size - 1) {
-                                            exercises[order].nextExerciseId = exercises[order + 1].id
-                                        }
-                                        exercises[order].trainingId = it.id
-                                        exerciseRepository.insert(exercises[order])
-                                    }
-                                }
-
+                                sendEventToUI(TrainingViewModelEvent.CloseDetailed(it))
                             }
                         }
-                        sendEventToUI(TrainingViewModelEvent.PopBackStack)
                     }
-
                 }
             }
             is TrainingEvent.OnDeleteExerciseClick -> {

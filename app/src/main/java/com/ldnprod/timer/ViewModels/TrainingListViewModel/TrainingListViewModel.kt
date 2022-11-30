@@ -19,11 +19,6 @@ class TrainingListViewModel @Inject constructor(
 ): ViewModel() {
     var trainings = ArrayList<Training>()
         private set
-    fun addTraining(training: Training){
-        viewModelScope.launch {
-            repository.insert(training)
-        }
-    }
 
     private val _viewModelEvent = Channel<TrainingListViewModelEvent> {  }
     val viewModelEvent = _viewModelEvent.receiveAsFlow()
@@ -36,8 +31,23 @@ class TrainingListViewModel @Inject constructor(
     }
     fun onEvent(event: TrainingListEvent) {
         when(event){
-            is TrainingListEvent.OnTrainingClick ->{
+            is TrainingListEvent.OnTrainingClick -> {
                 sendEventToUI(TrainingListViewModelEvent.JumpToDetail)
+            }
+            is TrainingListEvent.OnRequestUpdatesForList -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    trainings.let{
+                        val newTrainings = repository.getAll()
+                        if (newTrainings.size > it.size) {
+                            for (order in newTrainings.indices) {
+                                if (order > it.size - 1 || it[order].id != newTrainings[order].id) {
+                                    it.add(newTrainings[order])
+                                    sendEventToUI(TrainingListViewModelEvent.TrainingInserted(order))
+                                }
+                            }
+                        }
+                    }
+                }
             }
             else -> Unit
         }

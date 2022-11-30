@@ -29,14 +29,21 @@ class CreateTrainingActivity : AppCompatActivity() {
         binding = ActivityCreateTrainingBinding.inflate(layoutInflater)
         setContentView(binding.root)
         exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
-        binding.createButton.setOnClickListener {
-            trainingViewModel.onEvent(TrainingEvent.OnAddButtonClick)
+        binding.apply {
+            createButton.setOnClickListener {
+                trainingViewModel.onEvent(TrainingEvent.OnAddButtonClick)
+            }
+            doneButton.setOnClickListener {
+                trainingViewModel.onEvent(TrainingEvent.OnDoneButtonClick)
+            }
+            trainingTitleEdittext.setOnFocusChangeListener { _, hasFocus ->
+                if (!hasFocus) {
+                    trainingViewModel.onEvent(TrainingEvent.OnTitleChanged(trainingTitleEdittext.text.toString()))
+                }
+            }
+            recyclerView.layoutManager = LinearLayoutManager(this@CreateTrainingActivity)
+            recyclerView.adapter = exerciseAdapter
         }
-        binding.doneButton.setOnClickListener {
-            trainingViewModel.onEvent(TrainingEvent.OnDoneButtonClick)
-        }
-        binding.recyclerView.layoutManager = LinearLayoutManager(this)
-        binding.recyclerView.adapter = exerciseAdapter
         lifecycleScope.launch {
             trainingViewModel.viewModelEvent.collect { event ->
                 when(event) {
@@ -53,7 +60,7 @@ class CreateTrainingActivity : AppCompatActivity() {
                         exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
                         exerciseAdapter.notifyDataSetChanged()
                     }
-                    is TrainingViewModelEvent.PopBackStack -> {
+                    is TrainingViewModelEvent.CloseDetailed -> {
                         finish()
                     }
                     is TrainingViewModelEvent.CreateExercise -> {
