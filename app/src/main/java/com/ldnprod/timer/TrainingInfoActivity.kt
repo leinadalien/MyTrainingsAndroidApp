@@ -61,19 +61,24 @@ class TrainingInfoActivity : AppCompatActivity() {
                         exerciseAdapter.notifyItemMoved(event.fromPosition, event.toPosition)
                     }
                     is TrainingViewModelEvent.ExerciseRemoved -> {
-
                         exerciseAdapter.notifyItemRemoved(event.position)
-                        checkVisibilityDoneButton()
-                    }
-                    is TrainingViewModelEvent.ExerciseSetChanged -> {
-                        exerciseAdapter.exercises = viewModel.exercises
-                        exerciseAdapter.notifyDataSetChanged()
                     }
                     is TrainingViewModelEvent.TrainingClosed -> {
                         finish()
                     }
                     is TrainingViewModelEvent.ExerciseCreated -> {
                         showExerciseInfoDialog()
+                    }
+                    is TrainingViewModelEvent.TrainingLoaded -> {
+                        binding.apply {
+                            trainingTitleEdittext.setText(viewModel.title)
+                        }
+                        exerciseAdapter.exercises = viewModel.exercises
+                        exerciseAdapter.notifyDataSetChanged()
+                    }
+                    is TrainingViewModelEvent.TrainingStateChanged -> {
+                        binding.doneButton.visibility =
+                            if (event.likePrevious) View.GONE else View.VISIBLE
                     }
                     else -> Unit
                 }
@@ -89,7 +94,6 @@ class TrainingInfoActivity : AppCompatActivity() {
             val title = view.findViewById<EditText>(R.id.title_edittext).text.toString()
             val exercise = Exercise(description = title, duration = 10, trainingId = 0)
             viewModel.addExercise(exercise)
-            checkVisibilityDoneButton()
             Toast.makeText(this, "Successfully", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
         }
@@ -100,10 +104,5 @@ class TrainingInfoActivity : AppCompatActivity() {
         }
         dialog.create()
         dialog.show()
-    }
-
-    private fun checkVisibilityDoneButton() {
-        binding.doneButton.visibility =
-            if (viewModel.exercises.isNotEmpty()) View.VISIBLE else View.GONE
     }
 }
