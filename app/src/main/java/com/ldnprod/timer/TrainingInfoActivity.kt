@@ -2,12 +2,14 @@ package com.ldnprod.timer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.ExerciseAdapter
@@ -21,37 +23,37 @@ import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class TrainingInfoActivity : AppCompatActivity() {
-    private val trainingViewModel by viewModels<TrainingViewModel>()
+    private val viewModel by viewModels<TrainingViewModel>()
     private lateinit var binding: ActivityTrainingInfoBinding
     private lateinit var exerciseAdapter: ExerciseAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTrainingInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        intent.extras?.let {
-            val id = it.getInt("trainingId")
-            trainingViewModel.onEvent(TrainingEvent.OnTrainingRequested(id))
-        }
-        exerciseAdapter = ExerciseAdapter(trainingViewModel.exercises)
+        exerciseAdapter = ExerciseAdapter(viewModel.exercises) { viewModel.onEvent(it) }
         binding.apply {
-            createButton.setOnClickListener {
-                trainingViewModel.onEvent(TrainingEvent.OnAddButtonClick)
+            createButton
+                .setOnClickListener {
+                    viewModel.onEvent(TrainingEvent.OnAddButtonClick)
             }
-            doneButton.setOnClickListener {
-                trainingViewModel.onEvent(TrainingEvent.OnDoneButtonClick)
+            doneButton
+                .setOnClickListener {
+                viewModel.onEvent(TrainingEvent.OnDoneButtonClick)
             }
-            trainingTitleEdittext.setOnFocusChangeListener { _, hasFocus ->
-                if (!hasFocus) {
-                    trainingViewModel.onEvent(TrainingEvent.OnTitleChanged(trainingTitleEdittext.text.toString()))
+            trainingTitleEdittext.apply {
+                doOnTextChanged { _, _, _, _ ->
+                    viewModel.onEvent(TrainingEvent.OnTitleChanged(trainingTitleEdittext.text.toString()))
                 }
             }
-            recyclerView.layoutManager = LinearLayoutManager(this@TrainingInfoActivity)
-            recyclerView.adapter = exerciseAdapter
+            recyclerView.apply {
+                layoutManager = LinearLayoutManager(this@TrainingInfoActivity)
+                adapter = exerciseAdapter
+            }
         }
 
         lifecycleScope.launch {
-            trainingViewModel.viewModelEvent.collect { event ->
-                when(event) {
+            viewModel.viewModelEvent.collect { event ->
+                when (event) {
                     is TrainingViewModelEvent.ExerciseInserted -> {
                         exerciseAdapter.notifyItemInserted(event.position)
                     }
@@ -59,16 +61,18 @@ class TrainingInfoActivity : AppCompatActivity() {
                         exerciseAdapter.notifyItemMoved(event.fromPosition, event.toPosition)
                     }
                     is TrainingViewModelEvent.ExerciseRemoved -> {
+
                         exerciseAdapter.notifyItemRemoved(event.position)
+                        checkVisibilityDoneButton()
                     }
                     is TrainingViewModelEvent.ExerciseSetChanged -> {
-                        exerciseAdapter.exercises = trainingViewModel.exercises
+                        exerciseAdapter.exercises = viewModel.exercises
                         exerciseAdapter.notifyDataSetChanged()
                     }
-                    is TrainingViewModelEvent.CloseDetailed -> {
+                    is TrainingViewModelEvent.TrainingClosed -> {
                         finish()
                     }
-                    is TrainingViewModelEvent.CreateExercise -> {
+                    is TrainingViewModelEvent.ExerciseCreated -> {
                         showExerciseInfoDialog()
                     }
                     else -> Unit
@@ -76,21 +80,20 @@ class TrainingInfoActivity : AppCompatActivity() {
             }
         }
     }
+
     private fun showExerciseInfoDialog() {
         val view = LayoutInflater.from(this).inflate(R.layout.add_exercise_dialog_layout, null)
         val dialog = AlertDialog.Builder(this)
         dialog.setView(view)
-        dialog.setPositiveButton("Ok") {
-                dialog, _ ->
+        dialog.setPositiveButton("Ok") { dialog, _ ->
             val title = view.findViewById<EditText>(R.id.title_edittext).text.toString()
             val exercise = Exercise(description = title, duration = 10, trainingId = 0)
-            trainingViewModel.addExercise(exercise)
+            viewModel.addExercise(exercise)
             checkVisibilityDoneButton()
             Toast.makeText(this, "Successfully", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
         }
-        dialog.setNegativeButton("Cancel"){
-                dialog, _ ->
+        dialog.setNegativeButton("Cancel") { dialog, _ ->
             Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show()
             dialog.dismiss()
 
@@ -98,7 +101,9 @@ class TrainingInfoActivity : AppCompatActivity() {
         dialog.create()
         dialog.show()
     }
-    private fun checkVisibilityDoneButton(){
-        binding.doneButton.visibility = if (trainingViewModel.exercises.isNotEmpty()) View.VISIBLE else View.GONE
+
+    private fun checkVisibilityDoneButton() {
+        binding.doneButton.visibility =
+            if (viewModel.exercises.isNotEmpty()) View.VISIBLE else View.GONE
     }
 }

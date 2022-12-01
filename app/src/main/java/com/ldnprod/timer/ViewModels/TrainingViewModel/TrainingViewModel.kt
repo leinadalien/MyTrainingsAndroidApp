@@ -28,7 +28,7 @@ class TrainingViewModel @Inject constructor(
 
     fun addExercise(exercise: Exercise) {
         exercises.add(exercise)
-        sendEventToUI(TrainingViewModelEvent.ExerciseInserted(exercises.size, exercise))
+        sendEvent(TrainingViewModelEvent.ExerciseInserted(exercises.size, exercise))
     }
 
     private val _viewModelEvent = Channel<TrainingViewModelEvent> { }
@@ -43,7 +43,7 @@ class TrainingViewModel @Inject constructor(
                     training = it
                 }
                 exercises = exerciseRepository.getAllInTraining(training!!) as ArrayList<Exercise>
-                sendEventToUI(TrainingViewModelEvent.ExerciseSetChanged)
+                sendEvent(TrainingViewModelEvent.ExerciseSetChanged)
             }
         }
     }
@@ -56,10 +56,10 @@ class TrainingViewModel @Inject constructor(
             is TrainingEvent.OnExerciseClick -> {
             }
             is TrainingEvent.OnAddButtonClick -> {
-                sendEventToUI(TrainingViewModelEvent.CreateExercise)
+                sendEvent(TrainingViewModelEvent.ExerciseCreated)
             }
             is TrainingEvent.OnDoneButtonClick -> {
-                viewModelScope.launch {
+                viewModelScope.launch(Dispatchers.IO) {
                     title.let { trainingTitle ->
                         if (trainingTitle.isNotBlank()) {
                             if (training == null) training = Training(title = trainingTitle)
@@ -79,34 +79,24 @@ class TrainingViewModel @Inject constructor(
                                     exercises[order].trainingId = trainingId
                                     exerciseRepository.insert(exercises[order])
                                 }
-                                sendEventToUI(TrainingViewModelEvent.CloseDetailed(it))
+                                sendEvent(TrainingViewModelEvent.TrainingClosed(it))
                             }
                         }
                     }
                 }
             }
             is TrainingEvent.OnDeleteExerciseClick -> {
-                viewModelScope.launch {
-                    exerciseRepository.delete(event.exercise)
-                }
-            }
-            is TrainingEvent.OnTrainingRequested -> {
-                savedStateHandle["trainingId"] = event.id
                 viewModelScope.launch(Dispatchers.IO) {
-                    trainingRepository.getTrainingWithId(event.id)?.let {
-                        title = it.title
-                        training = it
-
-                    }
-                    exercises = exerciseRepository.getAllInTraining(training!!) as ArrayList<Exercise>
-                    sendEventToUI(TrainingViewModelEvent.ExerciseSetChanged)
+                    exercises.removeAt(event.position)
+                    exerciseRepository.delete(event.exercise)
+                    sendEvent(TrainingViewModelEvent.ExerciseRemoved(event.position))
                 }
             }
             else -> Unit
         }
     }
 
-    private fun sendEventToUI(event: TrainingViewModelEvent) {
+    private fun sendEvent(event: TrainingViewModelEvent) {
         viewModelScope.launch {
             _viewModelEvent.send(event)
         }

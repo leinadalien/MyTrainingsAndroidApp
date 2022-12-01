@@ -14,6 +14,15 @@ interface TrainingDao {
     @Delete
     suspend fun delete(training: Training)
 
+    @Query("DELETE FROM exercises WHERE training_id = :trainingId")
+    suspend fun clean(trainingId: Int)
+
+    @Transaction
+    suspend fun deleteAndClean(training: Training) {
+        clean(training.id)
+        delete(training)
+    }
+
     @Update
     suspend fun update(training: Training)
 

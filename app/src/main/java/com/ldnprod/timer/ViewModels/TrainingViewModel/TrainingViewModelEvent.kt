@@ -9,6 +9,6 @@ sealed class TrainingViewModelEvent {
     data class ExerciseRemoved(val position: Int): TrainingViewModelEvent()
     data class ExerciseMoved(val fromPosition: Int, val toPosition: Int): TrainingViewModelEvent()
     object ExerciseSetChanged: TrainingViewModelEvent()
-    data class CloseDetailed(val training: Training): TrainingViewModelEvent()
-    object CreateExercise: TrainingViewModelEvent()
+    data class TrainingClosed(val training: Training): TrainingViewModelEvent()
+    object ExerciseCreated: TrainingViewModelEvent()
 }

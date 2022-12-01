@@ -19,7 +19,8 @@
             android:exported="false"/>
         <activity
             android:name=".TrainingInfoActivity"
-            android:exported="false">
+            android:exported="false"
+            android:windowSoftInputMode="stateHidden">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

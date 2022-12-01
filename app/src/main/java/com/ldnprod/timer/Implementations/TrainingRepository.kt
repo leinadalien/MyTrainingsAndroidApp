@@ -12,7 +12,7 @@ class TrainingRepository(private val dao:TrainingDao): ITrainingRepository {
     }
 
     override suspend fun delete(training: Training) {
-        dao.delete(training)
+        dao.deleteAndClean(training)
     }
 
     override suspend fun update(training: Training) {

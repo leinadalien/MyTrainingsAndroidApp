@@ -23,13 +23,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        adapter = TrainingAdapter(this, viewModel.trainings)
+        adapter = TrainingAdapter(viewModel.trainings) { viewModel.onEvent(it) }
         binding.apply {
             createButton.setOnClickListener {
                 val intent = Intent(this@MainActivity, TrainingInfoActivity::class.java)
                 startActivity(intent)
             }
-
             recyclerView.layoutManager = LinearLayoutManager(this@MainActivity)
             recyclerView.adapter = adapter
         }
@@ -39,9 +38,19 @@ class MainActivity : AppCompatActivity() {
                     is TrainingListViewModelEvent.TrainingInserted -> {
                         adapter.notifyItemInserted(event.position)
                     }
+                    is TrainingListViewModelEvent.TrainingChanged -> {
+                        adapter.notifyItemChanged(event.position)
+                    }
                     is TrainingListViewModelEvent.TrainingSetChanged -> {
                         adapter.trainings = event.trainings
                         adapter.notifyDataSetChanged()
+                    }
+                    is TrainingListViewModelEvent.TrainingRemoved ->
+                        adapter.notifyItemRemoved(event.position)
+                    is TrainingListViewModelEvent.TrainingOpened -> {
+                        val intent = Intent(this@MainActivity, TrainingInfoActivity::class.java)
+                        intent.putExtra("trainingId", event.training.id)
+                        startActivity(intent)
                     }
                     else -> Unit
                 }
