@@ -59,6 +59,7 @@ class TrainingViewModel @Inject constructor(
                 updateState()
             }
             is TrainingEvent.OnExerciseClick -> {
+                sendEvent(TrainingViewModelEvent.ExerciseOpened(event.exercise, event.position))
             }
             is TrainingEvent.OnAddButtonClick -> {
                 sendEvent(TrainingViewModelEvent.ExerciseCreated)
@@ -104,6 +105,11 @@ class TrainingViewModel @Inject constructor(
                     updateState()
                 }
             }
+            is TrainingEvent.OnExerciseChanged -> {
+                exercises[event.position] = event.exercise
+                sendEvent(TrainingViewModelEvent.ExerciseChanged(event.position))
+                updateState()
+            }
             else -> Unit
         }
     }
@@ -112,7 +118,7 @@ class TrainingViewModel @Inject constructor(
         if (exercises.isNotEmpty()) {
             sendEvent(TrainingViewModelEvent.TrainingStateChanged(
                 prevState?.let {
-                    it.equals(TrainingState( title, exercises ))
+                    it == TrainingState(title, exercises)
                 } ?: true)
             )
         }

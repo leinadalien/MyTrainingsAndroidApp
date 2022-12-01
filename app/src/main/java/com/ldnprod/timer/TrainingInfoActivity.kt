@@ -2,7 +2,6 @@ package com.ldnprod.timer
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.EditText
@@ -18,6 +17,7 @@ import com.ldnprod.timer.Utils.TrainingEvent
 import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModel
 import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModelEvent
 import com.ldnprod.timer.databinding.ActivityTrainingInfoBinding
+import com.ldnprod.timer.databinding.ExerciseInfoDialogLayoutBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -50,7 +50,6 @@ class TrainingInfoActivity : AppCompatActivity() {
                 adapter = exerciseAdapter
             }
         }
-
         lifecycleScope.launch {
             viewModel.viewModelEvent.collect { event ->
                 when (event) {
@@ -80,27 +79,44 @@ class TrainingInfoActivity : AppCompatActivity() {
                         binding.doneButton.visibility =
                             if (event.likePrevious) View.GONE else View.VISIBLE
                     }
+                    is TrainingViewModelEvent.ExerciseOpened -> {
+                        showExerciseInfoDialog(event.exercise, event.position)
+                    }
+                    is TrainingViewModelEvent.ExerciseChanged -> {
+                        exerciseAdapter.notifyItemChanged(event.position)
+                    }
                     else -> Unit
                 }
             }
         }
     }
 
-    private fun showExerciseInfoDialog() {
-        val view = LayoutInflater.from(this).inflate(R.layout.add_exercise_dialog_layout, null)
+    private fun showExerciseInfoDialog(exercise: Exercise? = null, position: Int? = null) {
+        val dialogBinding = ExerciseInfoDialogLayoutBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
-        dialog.setView(view)
-        dialog.setPositiveButton("Ok") { dialog, _ ->
-            val title = view.findViewById<EditText>(R.id.title_edittext).text.toString()
-            val exercise = Exercise(description = title, duration = 10, trainingId = 0)
-            viewModel.addExercise(exercise)
-            Toast.makeText(this, "Successfully", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
+        exercise?.let {
+            dialogBinding.exerciseDescriptionEdittext.setText(it.description)
         }
-        dialog.setNegativeButton("Cancel") { dialog, _ ->
+        dialog.setView(dialogBinding.root)
+        dialog.setPositiveButton("Ok") { dlg, _ ->
+            dialogBinding.exerciseDescriptionEdittext.text.toString().let{ description ->
+                if (description.isNotBlank()) {
+                    exercise?.let {
+                        it.description = description
+                        viewModel.onEvent(TrainingEvent.OnExerciseChanged(it, position!!))
+                    } ?: run {
+                        viewModel.addExercise(Exercise(description = description, duration = 10, trainingId = 0))
+                    }
+                    Toast.makeText(this, "Successfully", Toast.LENGTH_SHORT).show()
+                    dlg.dismiss()
+                } else {
+                    Toast.makeText(this, "Description can't be empty", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+        dialog.setNegativeButton("Cancel") { dlg, _ ->
             Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show()
-            dialog.dismiss()
-
+            dlg.dismiss()
         }
         dialog.create()
         dialog.show()

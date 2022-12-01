@@ -27,7 +27,7 @@ class ExerciseAdapter(var exercises: List<Exercise>, private val onEvent: (Train
         val exercise = exercises[position]
         holder.apply {
             title.text = exercise.description
-            view.setOnClickListener { onEvent(TrainingEvent.OnExerciseClick(exercise)) }
+            view.setOnClickListener { onEvent(TrainingEvent.OnExerciseClick(exercise, position)) }
             deleteButton.setOnClickListener { onEvent(TrainingEvent.OnDeleteExerciseClick(exercise, position)) }
         }
 

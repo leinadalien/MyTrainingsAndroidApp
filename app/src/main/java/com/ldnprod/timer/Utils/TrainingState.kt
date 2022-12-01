@@ -1,27 +1,27 @@
 package com.ldnprod.timer.Utils
 
 import com.ldnprod.timer.Entities.Exercise
-
-class TrainingState(private val title: String, private var exercises: List<Exercise>) {
+class TrainingState(private val title: String, exercises: List<Exercise>) {
+    private val _exercises: List<Exercise>
     init {
-        exercises = exercises.toList()
+        val tempList = ArrayList<Exercise>()
+        exercises.forEach { tempList.add(it.copy()) }
+        _exercises = tempList.toList()
     }
     override fun equals(other: Any?): Boolean {
         return when (other) {
             is TrainingState -> {
-                if(title != other.title) false else {
-                    if (exercises.size != other.exercises.size) false else {
-                        var success = true
-                        for(i in exercises.indices) {
-                            if (!exercises[i].equals(other.exercises[i])) success = false
-                            break
-                        }
-                        success
-                    }
-                }
+                hashCode() == other.hashCode()
             }
             else -> false
         }
+    }
+
+    override fun hashCode(): Int {
+        var result = title.hashCode()
+        result = 31 * result + _exercises.hashCode()
+        _exercises.forEach { result = 31 * result + it.hashCode() }
+        return result
     }
 }
 
