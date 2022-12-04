@@ -1,13 +1,13 @@
 package com.ldnprod.timer
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
+import android.widget.NumberPicker
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -35,11 +35,11 @@ class TrainingInfoActivity : AppCompatActivity() {
             createButton
                 .setOnClickListener {
                     viewModel.onEvent(TrainingEvent.OnAddButtonClick)
-            }
+                }
             doneButton
                 .setOnClickListener {
-                viewModel.onEvent(TrainingEvent.OnDoneButtonClick)
-            }
+                    viewModel.onEvent(TrainingEvent.OnDoneButtonClick)
+                }
             trainingTitleEdittext.apply {
                 doOnTextChanged { _, _, _, _ ->
                     viewModel.onEvent(TrainingEvent.OnTitleChanged(trainingTitleEdittext.text.toString()))
@@ -94,25 +94,41 @@ class TrainingInfoActivity : AppCompatActivity() {
     private fun showExerciseInfoDialog(exercise: Exercise? = null, position: Int? = null) {
         val dialogBinding = ExerciseInfoDialogLayoutBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
-        exercise?.let {
-            dialogBinding.exerciseDescriptionEdittext.setText(it.description)
+        dialogBinding.apply {
+            initializeDialog(this)
+            exercise?.let {
+                exerciseDescriptionEdittext.setText(it.description)
+                minutePicker.value = it.duration / 60
+                secondPicker.value = it.duration % 60
+            }
         }
         dialog.setView(dialogBinding.root)
         dialog.setPositiveButton("Ok") { dlg, _ ->
-            dialogBinding.exerciseDescriptionEdittext.text.toString().let{ description ->
-                if (description.isNotBlank()) {
-                    exercise?.let {
-                        it.description = description
-                        viewModel.onEvent(TrainingEvent.OnExerciseChanged(it, position!!))
-                    } ?: run {
-                        viewModel.addExercise(Exercise(description = description, duration = 10, trainingId = 0))
+            dialogBinding.apply {
+                exerciseDescriptionEdittext.text.toString().let { description ->
+                    if (description.isNotBlank()) {
+                        exercise?.let {
+                            it.description = description
+                            it.duration = minutePicker.value * 60 + secondPicker.value
+                            viewModel.onEvent(TrainingEvent.OnExerciseChanged(it, position!!))
+                        } ?: run {
+                            viewModel.addExercise(
+                                Exercise(
+                                    description = description,
+                                    duration = 10,
+                                    trainingId = 0
+                                )
+                            )
+                        }
+                        Toast.makeText(this@TrainingInfoActivity, "Successfully", Toast.LENGTH_SHORT).show()
+                        dlg.dismiss()
+                    } else {
+                        Toast.makeText(this@TrainingInfoActivity, "Description can't be empty", Toast.LENGTH_SHORT)
+                            .show()
                     }
-                    Toast.makeText(this, "Successfully", Toast.LENGTH_SHORT).show()
-                    dlg.dismiss()
-                } else {
-                    Toast.makeText(this, "Description can't be empty", Toast.LENGTH_SHORT).show()
                 }
             }
+
         }
         dialog.setNegativeButton("Cancel") { dlg, _ ->
             Toast.makeText(this, "Canceled", Toast.LENGTH_SHORT).show()
@@ -120,5 +136,43 @@ class TrainingInfoActivity : AppCompatActivity() {
         }
         dialog.create()
         dialog.show()
+    }
+    private fun initializePicker(picker: NumberPicker, max: Int) {
+        picker.apply {
+            minValue = 0
+            maxValue = max
+            setFormatter { value -> String.format("%02d", value) }
+
+            value = 0
+            getChildAt(value).visibility = View.INVISIBLE
+        }
+    }
+    private fun initializeDialog(dialogLayoutBinding: ExerciseInfoDialogLayoutBinding) {
+        dialogLayoutBinding.apply {
+            initializePicker(minutePicker, 9)
+            initializePicker(secondPicker, 59)
+            secondPicker.value = 1
+
+            minutePicker.setOnValueChangedListener { picker, oldVal, newVal ->
+                if (newVal == 0) {
+                    secondPicker.minValue = 1
+                } else if (oldVal == 0) {
+                    secondPicker.minValue = 0
+                }
+            }
+            secondPicker.setOnValueChangedListener { picker, oldVal, newVal ->
+                if (newVal == 0) {
+                    minutePicker.apply {
+                        minValue = 1
+                        maxValue = 10
+                    }
+                } else if (oldVal == 0) {
+                    minutePicker.apply {
+                        minValue = 0
+                        maxValue = 9
+                    }
+                }
+            }
+        }
     }
 }
