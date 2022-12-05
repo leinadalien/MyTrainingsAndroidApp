@@ -6,7 +6,7 @@ import com.ldnprod.timer.Entities.Exercise
 @Dao
 interface ExerciseDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(exercise: Exercise)
+    suspend fun insert(exercise: Exercise) : Long
 
     @Delete
     suspend fun delete(exercise: Exercise)

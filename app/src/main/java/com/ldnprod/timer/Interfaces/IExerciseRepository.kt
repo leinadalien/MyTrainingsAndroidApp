@@ -5,7 +5,7 @@ import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Entities.Training
 
 interface IExerciseRepository {
-    suspend fun insert(exercise: Exercise)
+    suspend fun insert(exercise: Exercise) : Long
 
     suspend fun delete(exercise: Exercise)
 

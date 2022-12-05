@@ -10,8 +10,8 @@ class ExerciseRepository(
     private val dao:ExerciseDao
 ) : IExerciseRepository {
 
-    override suspend fun insert(exercise: Exercise) {
-        dao.insert(exercise)
+    override suspend fun insert(exercise: Exercise): Long {
+        return dao.insert(exercise)
     }
 
     override suspend fun delete(exercise: Exercise) {

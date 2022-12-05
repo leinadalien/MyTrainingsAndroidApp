@@ -95,12 +95,8 @@ class TrainingInfoActivity : AppCompatActivity() {
         val dialogBinding = ExerciseInfoDialogLayoutBinding.inflate(LayoutInflater.from(this))
         val dialog = AlertDialog.Builder(this)
         dialogBinding.apply {
-            initializeDialog(this)
-            exercise?.let {
-                exerciseDescriptionEdittext.setText(it.description)
-                minutePicker.value = it.duration / 60
-                secondPicker.value = it.duration % 60
-            }
+            initializeDialog(this, exercise)
+
         }
         dialog.setView(dialogBinding.root)
         dialog.setPositiveButton("Ok") { dlg, _ ->
@@ -115,7 +111,7 @@ class TrainingInfoActivity : AppCompatActivity() {
                             viewModel.addExercise(
                                 Exercise(
                                     description = description,
-                                    duration = 10,
+                                    duration = minutePicker.value * 60 + secondPicker.value,
                                     trainingId = 0
                                 )
                             )
@@ -147,7 +143,7 @@ class TrainingInfoActivity : AppCompatActivity() {
             getChildAt(value).visibility = View.INVISIBLE
         }
     }
-    private fun initializeDialog(dialogLayoutBinding: ExerciseInfoDialogLayoutBinding) {
+    private fun initializeDialog(dialogLayoutBinding: ExerciseInfoDialogLayoutBinding, exercise: Exercise?) {
         dialogLayoutBinding.apply {
             initializePicker(minutePicker, 9)
             initializePicker(secondPicker, 59)
@@ -172,6 +168,17 @@ class TrainingInfoActivity : AppCompatActivity() {
                         maxValue = 9
                     }
                 }
+            }
+            exercise?.let {
+                exerciseDescriptionEdittext.setText(it.description)
+                if (it.duration == 600) {
+                    minutePicker.minValue = 1
+                    minutePicker.maxValue = 10
+                    secondPicker.minValue = 0
+                    secondPicker.maxValue = 59
+                }
+                minutePicker.value = it.duration / 60
+                secondPicker.value = it.duration % 60
             }
         }
     }

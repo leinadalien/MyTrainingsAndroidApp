@@ -74,16 +74,17 @@ class TrainingViewModel @Inject constructor(
                                 val trainingId = trainingRepository.insert(
                                     it
                                 ).toInt()
+                                var prevId: Int? = null
                                 for (order in exercises.indices) {
                                     if (order > 0) {
-                                        exercises[order].previousExerciseId =
-                                            exercises[order - 1].id
-                                    }
-                                    if (order < exercises.size - 1) {
-                                        exercises[order].nextExerciseId = exercises[order + 1].id
+                                        exercises[order].previousExerciseId = prevId
                                     }
                                     exercises[order].trainingId = trainingId
-                                    exerciseRepository.insert(exercises[order])
+                                    prevId = exerciseRepository.insert(exercises[order]).toInt()
+                                    if (order > 0) {
+                                        exercises[order - 1].nextExerciseId = prevId
+                                        exerciseRepository.update(exercises[order - 1])
+                                    }
                                 }
                                 lazyDeletedExercises.forEach {
                                     ex -> exerciseRepository.delete(ex)
@@ -119,7 +120,7 @@ class TrainingViewModel @Inject constructor(
             sendEvent(TrainingViewModelEvent.TrainingStateChanged(
                 prevState?.let {
                     it == TrainingState(title, exercises)
-                } ?: true)
+                } ?: false)
             )
         }
     }
