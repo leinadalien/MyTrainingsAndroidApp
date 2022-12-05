@@ -12,6 +12,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import java.util.Collections
+import java.util.LinkedList
 import javax.inject.Inject
 
 @HiltViewModel
@@ -41,10 +43,17 @@ class TrainingViewModel @Inject constructor(
         val trainingId = savedStateHandle.get<Int>("trainingId") ?: -1
         if (trainingId != -1) {
             viewModelScope.launch(Dispatchers.IO) {
-                trainingRepository.getTrainingWithId(trainingId)?.let {
+                trainingRepository.getTrainingWithId(trainingId)?.let { it ->
                     title = it.title
                     training = it
-                    exercises = exerciseRepository.getAllInTraining(it) as ArrayList<Exercise>
+                    val receivedExercises = exerciseRepository.getAllInTraining(it) as ArrayList<Exercise>
+                    var prevId: Int? = null
+                    while(receivedExercises.isNotEmpty()) {
+                        val ex = receivedExercises.find { ex -> ex.previousExerciseId == prevId }
+                        prevId = ex?.id
+                        exercises.add(ex!!)
+                        receivedExercises.remove(ex)
+                    }
                     prevState = TrainingState(title, exercises)
                     sendEvent(TrainingViewModelEvent.TrainingLoaded)
                 }
@@ -75,16 +84,10 @@ class TrainingViewModel @Inject constructor(
                                     it
                                 ).toInt()
                                 var prevId: Int? = null
-                                for (order in exercises.indices) {
-                                    if (order > 0) {
-                                        exercises[order].previousExerciseId = prevId
-                                    }
-                                    exercises[order].trainingId = trainingId
-                                    prevId = exerciseRepository.insert(exercises[order]).toInt()
-                                    if (order > 0) {
-                                        exercises[order - 1].nextExerciseId = prevId
-                                        exerciseRepository.update(exercises[order - 1])
-                                    }
+                                exercises.forEach { ex ->
+                                    ex.previousExerciseId = prevId
+                                    ex.trainingId = trainingId
+                                    prevId = exerciseRepository.insert(ex).toInt()
                                 }
                                 lazyDeletedExercises.forEach {
                                     ex -> exerciseRepository.delete(ex)
@@ -109,6 +112,11 @@ class TrainingViewModel @Inject constructor(
             is TrainingEvent.OnExerciseChanged -> {
                 exercises[event.position] = event.exercise
                 sendEvent(TrainingViewModelEvent.ExerciseChanged(event.position))
+                updateState()
+            }
+            is TrainingEvent.OnExerciseMoved -> {
+                Collections.swap(exercises, event.startPosition, event.endPosition)
+                sendEvent(TrainingViewModelEvent.ExerciseMoved(event.startPosition, event.endPosition))
                 updateState()
             }
             else -> Unit

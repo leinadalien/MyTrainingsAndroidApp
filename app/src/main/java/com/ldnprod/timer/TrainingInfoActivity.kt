@@ -10,7 +10,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doOnTextChanged
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.ldnprod.timer.Adapters.ExerciseAdapter
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Utils.TrainingEvent
@@ -31,6 +33,7 @@ class TrainingInfoActivity : AppCompatActivity() {
         binding = ActivityTrainingInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
         exerciseAdapter = ExerciseAdapter(viewModel.exercises) { viewModel.onEvent(it) }
+
         binding.apply {
             createButton
                 .setOnClickListener {
@@ -48,6 +51,7 @@ class TrainingInfoActivity : AppCompatActivity() {
             recyclerView.apply {
                 layoutManager = LinearLayoutManager(this@TrainingInfoActivity)
                 adapter = exerciseAdapter
+                ItemTouchHelper(simpleCallback).attachToRecyclerView(this)
             }
         }
         lifecycleScope.launch {
@@ -180,6 +184,21 @@ class TrainingInfoActivity : AppCompatActivity() {
                 minutePicker.value = it.duration / 60
                 secondPicker.value = it.duration % 60
             }
+        }
+    }
+    private val simpleCallback = object: ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP.or(ItemTouchHelper.DOWN), 0) {
+        override fun onMove(
+            recyclerView: RecyclerView,
+            viewHolder: RecyclerView.ViewHolder,
+            target: RecyclerView.ViewHolder
+        ): Boolean {
+            val startPosition = viewHolder.adapterPosition
+            val endPosition = target.adapterPosition
+            viewModel.onEvent(TrainingEvent.OnExerciseMoved(startPosition, endPosition))
+            return true
+        }
+        override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+
         }
     }
 }
