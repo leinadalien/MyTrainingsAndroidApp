@@ -48,6 +48,11 @@ class MainActivity : AppCompatActivity() {
                     is TrainingListViewModelEvent.TrainingRemoved ->
                         adapter.notifyItemRemoved(event.position)
                     is TrainingListViewModelEvent.TrainingOpened -> {
+                        val intent = Intent(this@MainActivity, PlayTrainingActivity::class.java)
+                        intent.putExtra("trainingId", event.training.id)
+                        startActivity(intent)
+                    }
+                    is TrainingListViewModelEvent.TrainingInfoOpened -> {
                         val intent = Intent(this@MainActivity, TrainingInfoActivity::class.java)
                         intent.putExtra("trainingId", event.training.id)
                         startActivity(intent)

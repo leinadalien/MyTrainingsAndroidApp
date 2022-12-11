@@ -63,6 +63,9 @@ class TrainingListViewModel @Inject constructor(
             is TrainingListEvent.OnTrainingClick -> {
                 sendEvent(TrainingListViewModelEvent.TrainingOpened(event.training))
             }
+            is TrainingListEvent.OnEditTrainingClick -> {
+                sendEvent(TrainingListViewModelEvent.TrainingInfoOpened(event.training))
+            }
             else -> Unit
         }
     }

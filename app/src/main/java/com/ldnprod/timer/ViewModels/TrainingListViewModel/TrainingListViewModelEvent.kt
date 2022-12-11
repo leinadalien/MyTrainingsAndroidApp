@@ -8,5 +8,5 @@ sealed class TrainingListViewModelEvent {
     data class TrainingSetChanged(val trainings: List<Training>): TrainingListViewModelEvent()
     data class TrainingRemoved(val position: Int): TrainingListViewModelEvent()
     data class TrainingOpened(val training: Training): TrainingListViewModelEvent()
-
+    data class TrainingInfoOpened(val training: Training): TrainingListViewModelEvent()
 }
