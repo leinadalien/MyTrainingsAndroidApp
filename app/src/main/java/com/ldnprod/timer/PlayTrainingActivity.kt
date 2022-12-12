@@ -1,5 +1,6 @@
 package com.ldnprod.timer
 
+import android.annotation.SuppressLint
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -38,6 +39,9 @@ class PlayTrainingActivity : AppCompatActivity() {
                     is PlayTrainingViewModelEvent.TrainingLoaded -> {
                         binding.apply {
                             trainingTitle.text = viewModel.title
+                            @SuppressLint("SetTextI18n")
+                            remainingTimeTextview.text = "${"%02d".format(viewModel.remainingTime / 60)}:${"%02d".format(viewModel.remainingTime % 60)}"
+                            exerciseTitle.text = viewModel.currentExercise
                         }
                         exerciseAdapter.exercises = viewModel.exercises
                         exerciseAdapter.notifyDataSetChanged()

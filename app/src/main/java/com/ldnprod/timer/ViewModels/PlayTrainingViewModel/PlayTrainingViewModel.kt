@@ -25,6 +25,10 @@ class PlayTrainingViewModel @Inject constructor(
         private set
     var title = ""
         private set
+    var remainingTime = 600
+        private set
+    var currentExercise = ""
+        private set
 
 
     private val _viewModelEvent = Channel<PlayTrainingViewModelEvent> { }
@@ -40,10 +44,19 @@ class PlayTrainingViewModel @Inject constructor(
                     var prevId: Int? = null
                     while(receivedExercises.isNotEmpty()) {
                         val ex = receivedExercises.find { ex -> ex.previousExerciseId == prevId }
-                        prevId = ex?.id
-                        exercises.add(ex!!)
-                        receivedExercises.remove(ex)
+                        ex?.let { exercise ->
+                            prevId?.let {
+                                exercises.add(exercise)
+                            }?: run {
+                                currentExercise = exercise.description
+                                remainingTime = exercise.duration
+                            }
+                            prevId = exercise.id
+                            receivedExercises.remove(ex)
+                        }
+
                     }
+
                     sendEvent(PlayTrainingViewModelEvent.TrainingLoaded)
                 }
             }
@@ -53,7 +66,6 @@ class PlayTrainingViewModel @Inject constructor(
     fun onEvent(event: PlayTrainingEvent) {
         when(event){
             is PlayTrainingEvent.OnSkipClicked -> {
-
                 exercises.removeAt(event.position)
                 sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(event.position))
             }
