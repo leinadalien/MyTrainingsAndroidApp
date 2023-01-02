@@ -6,12 +6,14 @@ import androidx.core.app.NotificationCompat
 import com.ldnprod.timer.R
 import com.ldnprod.timer.Services.Constants.NOTIFICATION_CHANNEL_ID
 import com.ldnprod.timer.Services.ServiceHelper
+import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
 
+@Module
 @InstallIn(ServiceComponent::class)
 object NotificationModule {
 

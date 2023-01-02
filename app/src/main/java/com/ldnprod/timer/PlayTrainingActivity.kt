@@ -8,17 +8,24 @@ import android.content.ServiceConnection
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
+import android.view.View
 import androidx.activity.viewModels
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.ExercisePreviewAdapter
+import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_CANCEL
+import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_START
+import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_STOP
+import com.ldnprod.timer.Services.ServiceHelper
 import com.ldnprod.timer.Services.TrainingService
 import com.ldnprod.timer.ViewModels.PlayTrainingViewModel.PlayTrainingViewModelEvent
 import com.ldnprod.timer.ViewModels.PlayTrainingViewModel.PlayTrainingViewModel
 import com.ldnprod.timer.databinding.ActivityPlayTrainingBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlin.math.min
 
 @AndroidEntryPoint
 class PlayTrainingActivity : AppCompatActivity() {
@@ -32,6 +39,7 @@ class PlayTrainingActivity : AppCompatActivity() {
             val binder = service as TrainingService.TrainingBinder
             trainingService = binder.getService()
             isBound = true
+
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
@@ -48,6 +56,24 @@ class PlayTrainingActivity : AppCompatActivity() {
                 layoutManager = LinearLayoutManager(this@PlayTrainingActivity)
                 adapter = exerciseAdapter
             }
+            startButton.setOnClickListener {
+                if (trainingService.currentState.value == TrainingService.State.Idle) {
+                    cancelButton.visibility = View.VISIBLE
+                }
+                ServiceHelper.triggerForegroundService(
+                    this@PlayTrainingActivity,
+                    if (trainingService.currentState.value == TrainingService.State.Started) ACTION_SERVICE_STOP
+                    else ACTION_SERVICE_START
+                )
+
+            }
+            cancelButton.setOnClickListener {
+                ServiceHelper.triggerForegroundService(
+                    this@PlayTrainingActivity, ACTION_SERVICE_CANCEL
+                )
+                cancelButton.visibility = View.GONE
+            }
+            cancelButton.visibility = View.GONE
         }
         lifecycleScope.launch {
             viewModel.viewModelEvent.collect { event ->
@@ -68,8 +94,14 @@ class PlayTrainingActivity : AppCompatActivity() {
                 }
             }
         }
-    }
 
+    }
+    @SuppressLint("SetTextI18n")
+    private fun updateClock() {
+        binding.apply {
+            remainingTimeTextview.text = "${"%02d".format(viewModel.remainingTime / 60)}:${"%02d".format(viewModel.remainingTime % 60)}"
+        }
+    }
     override fun onStart() {
         super.onStart()
         Intent(this, TrainingService::class.java).also { intent ->  
