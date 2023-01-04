@@ -17,6 +17,7 @@ import com.ldnprod.timer.Adapters.ExercisePreviewAdapter
 import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_STOP
 import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_START
 import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_PAUSE
+import com.ldnprod.timer.Services.Constants.TRAINING_ID
 import com.ldnprod.timer.Services.ServiceHelper
 import com.ldnprod.timer.Services.TrainingService
 import com.ldnprod.timer.ViewModels.PlayTrainingViewModel.PlayTrainingViewModelEvent
@@ -71,6 +72,7 @@ class PlayTrainingActivity : AppCompatActivity() {
                     this@PlayTrainingActivity,
                     if (trainingService.currentState.value == TrainingService.State.Started) ACTION_SERVICE_PAUSE
                     else ACTION_SERVICE_START,
+                    viewModel.training.value!!.id,
                     viewModel.currentExercise.value!!.id
                 )
 
@@ -78,6 +80,7 @@ class PlayTrainingActivity : AppCompatActivity() {
             cancelButton.setOnClickListener {
                 ServiceHelper.triggerForegroundService(
                     this@PlayTrainingActivity, ACTION_SERVICE_STOP,
+                    viewModel.training.value!!.id,
                     viewModel.currentExercise.value!!.id
                 )
                 cancelButton.visibility = View.GONE

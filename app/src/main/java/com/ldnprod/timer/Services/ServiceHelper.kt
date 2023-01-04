@@ -16,18 +16,14 @@ object ServiceHelper {
         else
             0
     fun clickPendingIntent(context: Context, trainingId: Int): PendingIntent {
-//        val resultIntent = Intent(context, PlayTrainingActivity::class.java).apply { putExtra("trainingId", trainingId) }
-//        val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
-//            addNextIntentWithParentStack(resultIntent)
-//            getPendingIntent(
-//                CLICK_REQUEST_CODE,
-//                flag)
-//        }
-//        return resultPendingIntent
-        val clickIntent = Intent(context, PlayTrainingActivity::class.java).apply { putExtra("trainingId", trainingId) }
-        return PendingIntent.getActivity(
-            context, CLICK_REQUEST_CODE, clickIntent, flag
-        )
+        val resultIntent = Intent(context, PlayTrainingActivity::class.java).apply { putExtra("trainingId", trainingId) }
+        val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+            addNextIntentWithParentStack(resultIntent)
+            getPendingIntent(
+                CLICK_REQUEST_CODE,
+                PendingIntent.FLAG_UPDATE_CURRENT)
+        }
+        return resultPendingIntent
     }
 
     fun pausePendingIntent(context: Context): PendingIntent {
@@ -66,10 +62,11 @@ object ServiceHelper {
         )
     }
 
-    fun triggerForegroundService(context: Context, action: String, exerciseId: Int) {
+    fun triggerForegroundService(context: Context, action: String, trainingId: Int, exerciseId: Int) {
         Intent(context, TrainingService::class.java).apply {
             this.action = action
             this.putExtra(EXERCISE_ID, exerciseId)
+            this.putExtra(TRAINING_ID, trainingId)
             context.startService(this)
         }
     }

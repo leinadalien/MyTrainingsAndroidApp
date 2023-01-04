@@ -55,6 +55,11 @@ class TrainingService: Service() {
 
     override fun onBind(intent: Intent?) = binder
 
+    override fun onCreate() {
+        super.onCreate()
+
+    }
+
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.getStringExtra(TRAINING_STATE)) {
@@ -64,7 +69,8 @@ class TrainingService: Service() {
                 CoroutineScope(Dispatchers.IO).launch {
                     exercise.postValue(exerciseRepository.getById(intent.getIntExtra(EXERCISE_ID, 1)))
                 }
-                notificationBuilder.setContentIntent(ServiceHelper.clickPendingIntent(applicationContext, exercise.value!!.trainingId))
+                notificationBuilder.setContentIntent(ServiceHelper.clickPendingIntent(applicationContext, intent.getIntExtra(
+                    TRAINING_ID, 1))).build()
                 startTraining()
             }
             State.Paused.name -> {
@@ -84,7 +90,10 @@ class TrainingService: Service() {
                     startForegroundService()
                     CoroutineScope(Dispatchers.IO).launch {
                         exercise.postValue(exerciseRepository.getById(intent.getIntExtra(EXERCISE_ID, 1)))
+
                     }
+                    notificationBuilder.setContentIntent(ServiceHelper.clickPendingIntent(applicationContext, intent.getIntExtra(
+                        TRAINING_ID, 1))).build()
                     startTraining()
                 }
                 ACTION_SERVICE_PAUSE -> {

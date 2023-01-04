@@ -5,6 +5,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ldnprod.timer.Entities.Exercise
+import com.ldnprod.timer.Entities.Training
 import com.ldnprod.timer.Interfaces.IExerciseRepository
 import com.ldnprod.timer.Interfaces.ITrainingRepository
 import com.ldnprod.timer.Utils.PlayTrainingEvent
@@ -30,7 +31,8 @@ class PlayTrainingViewModel @Inject constructor(
         private set
     var currentExercise = MutableLiveData<Exercise>(null)
         private set
-
+    var training = MutableLiveData<Training>(null)
+        private set
 
     private val _viewModelEvent = Channel<PlayTrainingViewModelEvent> { }
     val viewModelEvent = _viewModelEvent.receiveAsFlow()
@@ -40,6 +42,7 @@ class PlayTrainingViewModel @Inject constructor(
         if (trainingId != -1) {
             viewModelScope.launch(Dispatchers.IO) {
                 trainingRepository.getTrainingWithId(trainingId)?.let { it ->
+                    training.postValue(it)
                     title = it.title
                     val receivedExercises = exerciseRepository.getAllInTraining(it) as ArrayList<Exercise>
                     var prevId: Int? = null
