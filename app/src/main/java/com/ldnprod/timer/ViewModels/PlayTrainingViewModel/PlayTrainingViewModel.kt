@@ -1,5 +1,6 @@
 package com.ldnprod.timer.ViewModels.PlayTrainingViewModel
 
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,7 +28,7 @@ class PlayTrainingViewModel @Inject constructor(
         private set
     var remainingTime = 600
         private set
-    var currentExercise = ""
+    var currentExercise = MutableLiveData<Exercise>(null)
         private set
 
 
@@ -48,7 +49,7 @@ class PlayTrainingViewModel @Inject constructor(
                             prevId?.let {
                                 exercises.add(exercise)
                             }?: run {
-                                currentExercise = exercise.description
+                                currentExercise.postValue(exercise)
                                 remainingTime = exercise.duration
                             }
                             prevId = exercise.id

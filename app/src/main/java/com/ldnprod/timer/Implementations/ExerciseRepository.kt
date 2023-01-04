@@ -29,4 +29,8 @@ class ExerciseRepository(
     override fun getAllInTraining(training: Training): List<Exercise> {
         return dao.getAllInTraining(training.id)
     }
+
+    override fun getById(id: Int): Exercise {
+        return dao.getById(id)
+    }
 }

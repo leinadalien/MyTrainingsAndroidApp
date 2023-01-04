@@ -7,57 +7,48 @@ import android.app.Service
 import android.content.Intent
 import android.os.Binder
 import android.os.Build
-import android.os.IBinder
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.Builder
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.ldnprod.timer.Entities.Exercise
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_CANCEL
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_START
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_STOP
-import com.ldnprod.timer.Services.Constants.NOTIFICATION_CHANNEL_ID
-import com.ldnprod.timer.Services.Constants.NOTIFICATION_CHANNEL_NAME
-import com.ldnprod.timer.Services.Constants.NOTIFICATION_ID
-import com.ldnprod.timer.Services.Constants.TRAINING_STATE
+import com.ldnprod.timer.Interfaces.IExerciseRepository
+import com.ldnprod.timer.Services.Constants.*
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.Timer
 
 import javax.inject.Inject
 import kotlin.concurrent.fixedRateTimer
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 
 @AndroidEntryPoint
-class TrainingService() : Service() {
+class TrainingService: Service() {
     @Inject
     lateinit var notificationManager: NotificationManager
     @Inject
     lateinit var notificationBuilder: Builder
-
+    @Inject
+    lateinit var exerciseRepository: IExerciseRepository
     inner class TrainingBinder : Binder() {
         fun getService(): TrainingService = this@TrainingService
     }
     enum class State {
         Idle,
         Started,
-        Stopped,
-        Canceled
+        Paused,
+        Stopped
     }
     private val binder = TrainingBinder()
 
     private var counter = 0;
     private lateinit var timer: Timer
 
-    var timeOfExercise = 600
+    var remainingTime = MutableLiveData(0)
         private set
-    var seconds = MutableLiveData("00")
-        private set
-    var minutes = MutableLiveData("00")
-        private set
-    var exercise = MutableLiveData("Exercise")
+    var exercise = MutableLiveData<Exercise>(null)
         private set
     var currentState = MutableLiveData(State.Idle)
         private set
@@ -68,17 +59,19 @@ class TrainingService() : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when(intent?.getStringExtra(TRAINING_STATE)) {
             State.Started.name -> {
-                setStopButton()
+                setPauseButton()
                 startForegroundService()
-                startTraining { minutes, seconds ->
-                    updateNotification(minutes,seconds)
+                CoroutineScope(Dispatchers.IO).launch {
+                    exercise.postValue(exerciseRepository.getById(intent.getIntExtra(EXERCISE_ID, 1)))
                 }
+                notificationBuilder.setContentIntent(ServiceHelper.clickPendingIntent(applicationContext, exercise.value!!.trainingId))
+                startTraining()
             }
-            State.Stopped.name -> {
+            State.Paused.name -> {
                 stopTraining()
                 setResumeButton()
             }
-            State.Canceled.name -> {
+            State.Stopped.name -> {
                 stopTraining()
                 cancelTraining()
                 stopForegroundService()
@@ -87,39 +80,42 @@ class TrainingService() : Service() {
         intent?.let {
             when(it.action) {
                 ACTION_SERVICE_START -> {
-                    setStopButton()
+                    setPauseButton()
                     startForegroundService()
-                    startTraining { minutes, seconds ->
-                        updateNotification(minutes, seconds)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        exercise.postValue(exerciseRepository.getById(intent.getIntExtra(EXERCISE_ID, 1)))
                     }
-
+                    startTraining()
                 }
-                ACTION_SERVICE_STOP -> {
+                ACTION_SERVICE_PAUSE -> {
                     setResumeButton()
                     stopTraining()
                 }
-                ACTION_SERVICE_CANCEL -> {
+                ACTION_SERVICE_STOP -> {
                     stopTraining()
                     cancelTraining()
                     stopForegroundService()
+                }
+                ACTION_SERVICE_NEXT -> {
+
                 }
             }
         }
         return super.onStartCommand(intent, flags, startId)
     }
-    private fun startTraining(onTick: (minutes: String, seconds: String) -> Unit) {
+    private fun startTraining() {
         currentState.value = State.Started
         timer = fixedRateTimer(initialDelay = 1000L, period = 1000L) {
             counter += 1
             updateTimerUnits()
-            onTick(minutes.value!!, seconds.value!!)
+            updateNotification()
         }
     }
     private fun stopTraining() {
         if (this::timer.isInitialized) {
             timer.cancel()
         }
-        currentState.value = State.Stopped
+        currentState.value = State.Paused
     }
     private fun cancelTraining() {
         counter = 0
@@ -127,9 +123,7 @@ class TrainingService() : Service() {
         updateTimerUnits()
     }
     private fun updateTimerUnits() {
-        val timeLeft = timeOfExercise - counter
-        this.minutes.postValue("%02d".format(timeLeft / 60))
-        this.seconds.postValue("%02d".format(timeLeft % 60))
+        this.remainingTime.postValue(exercise.value!!.duration - counter)
     }
     private fun startForegroundService() {
         createNotificationChannel()
@@ -146,26 +140,36 @@ class TrainingService() : Service() {
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
                 NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
             )
             notificationManager.createNotificationChannel(channel)
         }
     }
-    private fun updateNotification(minutes: String, seconds: String) {
-        notificationManager.notify(
-            NOTIFICATION_ID,
-            notificationBuilder.setContentText(
-                "$exercise: $minutes:$seconds"
-            ).build()
-        )
+    private fun updateNotification() {
+        exercise.value!!.let { exercise ->
+//            if (remainingTime == 0) {
+//                if(exercise.)
+//            }
+            notificationManager.notify(
+                NOTIFICATION_ID,
+                notificationBuilder.setContentText(
+                    remainingTime.value!!.let { remainingTime ->
+                        "${exercise.description} - ${
+                            "%02d".format(remainingTime / 60)}:${
+                            "%02d".format(remainingTime % 60)}"
+                    }
+
+                ).build()
+            )
+        }
     }
     @SuppressLint("RestrictedApi")
-    private fun setStopButton(){
+    private fun setPauseButton(){
         notificationBuilder.mActions.removeAt(0)
         notificationBuilder.mActions.add(
             0,
             NotificationCompat.Action(
-                0, "Stop", ServiceHelper.stopPendingIntent(this)
+                0, "Pause", ServiceHelper.pausePendingIntent(this)
             )
         )
         notificationManager.notify(NOTIFICATION_ID,notificationBuilder.build())

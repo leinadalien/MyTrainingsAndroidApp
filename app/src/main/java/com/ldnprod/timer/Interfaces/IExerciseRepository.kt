@@ -14,4 +14,6 @@ interface IExerciseRepository {
     fun getAll(): List<Exercise>
 
     fun getAllInTraining(training: Training): List<Exercise>
+
+    fun getById(id: Int): Exercise
 }

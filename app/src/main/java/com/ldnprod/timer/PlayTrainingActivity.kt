@@ -12,12 +12,11 @@ import android.view.View
 import androidx.activity.viewModels
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.ExercisePreviewAdapter
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_CANCEL
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_START
 import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_STOP
+import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_START
+import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_PAUSE
 import com.ldnprod.timer.Services.ServiceHelper
 import com.ldnprod.timer.Services.TrainingService
 import com.ldnprod.timer.ViewModels.PlayTrainingViewModel.PlayTrainingViewModelEvent
@@ -25,7 +24,6 @@ import com.ldnprod.timer.ViewModels.PlayTrainingViewModel.PlayTrainingViewModel
 import com.ldnprod.timer.databinding.ActivityPlayTrainingBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
-import kotlin.math.min
 
 @AndroidEntryPoint
 class PlayTrainingActivity : AppCompatActivity() {
@@ -39,13 +37,22 @@ class PlayTrainingActivity : AppCompatActivity() {
             val binder = service as TrainingService.TrainingBinder
             trainingService = binder.getService()
             isBound = true
-
+            trainingService.remainingTime.observe(this@PlayTrainingActivity as LifecycleOwner) {
+                if (trainingService.currentState.value == TrainingService.State.Started) {
+                    binding.apply {
+                        @SuppressLint("SetTextI18n")
+                        remainingTimeTextview.text =
+                            "${"%02d".format(it / 60)}:${"%02d".format(it % 60)}"
+                    }
+                }
+            }
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             isBound = false
         }
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityPlayTrainingBinding.inflate(layoutInflater)
@@ -62,14 +69,16 @@ class PlayTrainingActivity : AppCompatActivity() {
                 }
                 ServiceHelper.triggerForegroundService(
                     this@PlayTrainingActivity,
-                    if (trainingService.currentState.value == TrainingService.State.Started) ACTION_SERVICE_STOP
-                    else ACTION_SERVICE_START
+                    if (trainingService.currentState.value == TrainingService.State.Started) ACTION_SERVICE_PAUSE
+                    else ACTION_SERVICE_START,
+                    viewModel.currentExercise.value!!.id
                 )
 
             }
             cancelButton.setOnClickListener {
                 ServiceHelper.triggerForegroundService(
-                    this@PlayTrainingActivity, ACTION_SERVICE_CANCEL
+                    this@PlayTrainingActivity, ACTION_SERVICE_STOP,
+                    viewModel.currentExercise.value!!.id
                 )
                 cancelButton.visibility = View.GONE
             }
@@ -77,7 +86,7 @@ class PlayTrainingActivity : AppCompatActivity() {
         }
         lifecycleScope.launch {
             viewModel.viewModelEvent.collect { event ->
-                when(event) {
+                when (event) {
                     is PlayTrainingViewModelEvent.ExerciseDeleted -> {
                         exerciseAdapter.notifyItemRemoved(event.position)
                     }
@@ -85,8 +94,11 @@ class PlayTrainingActivity : AppCompatActivity() {
                         binding.apply {
                             trainingTitle.text = viewModel.title
                             @SuppressLint("SetTextI18n")
-                            remainingTimeTextview.text = "${"%02d".format(viewModel.remainingTime / 60)}:${"%02d".format(viewModel.remainingTime % 60)}"
-                            exerciseTitle.text = viewModel.currentExercise
+                            remainingTimeTextview.text =
+                                "${"%02d".format(viewModel.remainingTime / 60)}:${
+                                    "%02d".format(viewModel.remainingTime % 60)
+                                }"
+                            exerciseTitle.text = viewModel.currentExercise.value!!.description
                         }
                         exerciseAdapter.exercises = viewModel.exercises
                         exerciseAdapter.notifyDataSetChanged()
@@ -96,16 +108,11 @@ class PlayTrainingActivity : AppCompatActivity() {
         }
 
     }
-    @SuppressLint("SetTextI18n")
-    private fun updateClock() {
-        binding.apply {
-            remainingTimeTextview.text = "${"%02d".format(viewModel.remainingTime / 60)}:${"%02d".format(viewModel.remainingTime % 60)}"
-        }
-    }
+
     override fun onStart() {
         super.onStart()
-        Intent(this, TrainingService::class.java).also { intent ->  
-            bindService(intent, connection,Context.BIND_AUTO_CREATE)
+        Intent(this, TrainingService::class.java).also { intent ->
+            bindService(intent, connection, Context.BIND_AUTO_CREATE)
         }
     }
 

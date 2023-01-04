@@ -1,15 +1,13 @@
 package com.ldnprod.timer.Services
 
 import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.annotation.RequiresApi
 import com.ldnprod.timer.PlayTrainingActivity
-import com.ldnprod.timer.Services.Constants.CLICK_REQUEST_CODE
-import com.ldnprod.timer.Services.Constants.CANCEL_REQUEST_CODE
-import com.ldnprod.timer.Services.Constants.RESUME_REQUEST_CODE
-import com.ldnprod.timer.Services.Constants.STOP_REQUEST_CODE
-import com.ldnprod.timer.Services.Constants.TRAINING_STATE
+import com.ldnprod.timer.Services.Constants.*
 
 object ServiceHelper {
     private val flag =
@@ -17,20 +15,30 @@ object ServiceHelper {
             PendingIntent.FLAG_IMMUTABLE
         else
             0
-    fun clickPendingIntent(context: Context): PendingIntent {
-        val clickIntent = Intent(context, PlayTrainingActivity::class.java)
+    fun clickPendingIntent(context: Context, trainingId: Int): PendingIntent {
+//        val resultIntent = Intent(context, PlayTrainingActivity::class.java).apply { putExtra("trainingId", trainingId) }
+//        val resultPendingIntent: PendingIntent = TaskStackBuilder.create(context).run {
+//            addNextIntentWithParentStack(resultIntent)
+//            getPendingIntent(
+//                CLICK_REQUEST_CODE,
+//                flag)
+//        }
+//        return resultPendingIntent
+        val clickIntent = Intent(context, PlayTrainingActivity::class.java).apply { putExtra("trainingId", trainingId) }
         return PendingIntent.getActivity(
             context, CLICK_REQUEST_CODE, clickIntent, flag
         )
     }
-    fun stopPendingIntent(context: Context): PendingIntent {
-        val stopIntent = Intent(context, TrainingService::class.java).apply {
-            putExtra(TRAINING_STATE, TrainingService.State.Stopped.name)
+
+    fun pausePendingIntent(context: Context): PendingIntent {
+        val pauseIntent = Intent(context, TrainingService::class.java).apply {
+            putExtra(TRAINING_STATE, TrainingService.State.Paused.name)
         }
         return PendingIntent.getService(
-            context, STOP_REQUEST_CODE, stopIntent, flag
+            context, PAUSE_REQUEST_CODE, pauseIntent, flag
         )
     }
+
     fun resumePendingIntent(context: Context): PendingIntent {
         val resumeIntent = Intent(context, TrainingService::class.java).apply {
             putExtra(TRAINING_STATE, TrainingService.State.Started.name)
@@ -39,17 +47,29 @@ object ServiceHelper {
             context, RESUME_REQUEST_CODE, resumeIntent, flag
         )
     }
-    fun cancelPendingIntent(context: Context): PendingIntent {
-        val cancelIntent = Intent(context, TrainingService::class.java).apply {
-            putExtra(TRAINING_STATE, TrainingService.State.Canceled.name)
+
+    fun stopPendingIntent(context: Context): PendingIntent {
+        val stopIntent = Intent(context, TrainingService::class.java).apply {
+            putExtra(TRAINING_STATE, TrainingService.State.Stopped.name)
         }
         return PendingIntent.getService(
-            context, CANCEL_REQUEST_CODE, cancelIntent, flag
+            context, STOP_REQUEST_CODE, stopIntent, flag
         )
     }
-    fun triggerForegroundService(context: Context, action: String) {
+
+    fun nextExercisePendingIntent(context: Context): PendingIntent {
+        val nextIntent = Intent(context, TrainingService::class.java).apply {
+            putExtra(TRAINING_STATE, TrainingService.State.Started.name)
+        }
+        return PendingIntent.getService(
+            context, NEXT_REQUEST_CODE, nextIntent, flag
+        )
+    }
+
+    fun triggerForegroundService(context: Context, action: String, exerciseId: Int) {
         Intent(context, TrainingService::class.java).apply {
             this.action = action
+            this.putExtra(EXERCISE_ID, exerciseId)
             context.startService(this)
         }
     }

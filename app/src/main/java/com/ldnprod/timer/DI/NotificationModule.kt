@@ -27,9 +27,9 @@ object NotificationModule {
             .setContentText("Exercise 00:00")
             .setSmallIcon(R.drawable.ic_app_icon)
             .setOngoing(true)
+            .addAction(0, "Pause", ServiceHelper.pausePendingIntent(context))
             .addAction(0, "Stop", ServiceHelper.stopPendingIntent(context))
-            .addAction(0, "Cancel", ServiceHelper.cancelPendingIntent(context))
-            .setContentIntent(ServiceHelper.clickPendingIntent(context))
+            .setContentIntent(ServiceHelper.clickPendingIntent(context, 1))
     }
     @ServiceScoped
     @Provides

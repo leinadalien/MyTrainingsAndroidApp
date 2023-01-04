@@ -19,4 +19,7 @@ interface ExerciseDao {
 
     @Query("SELECT * FROM exercises WHERE training_id =:trainingId")
     fun getAllInTraining(trainingId: Int): List<Exercise>
+
+    @Query("SELECT * FROM exercises WHERE id =:id")
+    fun getById(id: Int): Exercise
 }
