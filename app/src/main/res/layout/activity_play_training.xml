@@ -44,21 +44,23 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="25dp"
         android:layout_marginBottom="25dp"
+        android:backgroundTint="@color/green"
         android:contentDescription="startButton"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/cancel_button"
+        app:layout_constraintEnd_toStartOf="@+id/stop_button"
         app:srcCompat="@drawable/ic_play" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/cancel_button"
+        android:id="@+id/stop_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="25dp"
         android:layout_marginBottom="25dp"
+        android:backgroundTint="@color/red"
         android:contentDescription="cancelButton"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/ic_cancel" />
+        app:srcCompat="@drawable/ic_stop" />
 
     <TextView
         android:id="@+id/remaining_time_textview"

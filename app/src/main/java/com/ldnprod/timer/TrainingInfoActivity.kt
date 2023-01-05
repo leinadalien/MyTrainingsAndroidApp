@@ -66,8 +66,8 @@ class TrainingInfoActivity : AppCompatActivity() {
                     is TrainingViewModelEvent.ExerciseRemoved -> {
                         exerciseAdapter.notifyItemRemoved(event.position)
                     }
-                    is TrainingViewModelEvent.TrainingClosed -> {
-                        finish()
+                    is TrainingViewModelEvent.TrainingSaved -> {
+                        binding.doneButton.visibility = View.GONE
                     }
                     is TrainingViewModelEvent.ExerciseCreated -> {
                         showExerciseInfoDialog()

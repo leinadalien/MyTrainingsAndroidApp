@@ -39,7 +39,7 @@ class TrainingService: Service() {
         fun getService(): TrainingService = this@TrainingService
     }
     enum class State {
-        Idle, Started, Paused, Resumed, Stopped
+        Idle, Started, Paused, Resumed, Stopped, GoNext
     }
     private val binder = TrainingBinder()
 
@@ -59,8 +59,8 @@ class TrainingService: Service() {
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
-            val trainingId = intent.getIntExtra(TRAINING_ID, -1)!!
-            when(intent.getStringExtra(TRAINING_STATE)) {
+            val trainingId = it.getIntExtra(TRAINING_ID, -1)!!
+            when(it.getStringExtra(TRAINING_STATE)) {
                 State.Started.name -> startTraining(trainingId)
                 State.Paused.name -> pauseTraining(trainingId)
                 State.Resumed.name -> resumeTraining(trainingId)
@@ -68,6 +68,7 @@ class TrainingService: Service() {
                     stopTraining(trainingId)
                     stopForegroundService()
                 }
+                State.GoNext.name -> goNextExerciseInTraining(trainingId)
             }
             when(it.action) {
                 ACTION_SERVICE_START -> startTraining(trainingId)
@@ -77,6 +78,7 @@ class TrainingService: Service() {
                     stopTraining(trainingId)
                     stopForegroundService()
                 }
+                ACTION_SERVICE_NEXT -> goNextExerciseInTraining(trainingId)
             }
         }
 
@@ -95,7 +97,7 @@ class TrainingService: Service() {
         startForegroundService()
 
         notificationBuilder.setContentIntent(ServiceHelper.clickPendingIntent(applicationContext, trainingId)).build()
-        currentState.value = State.Started
+        currentState.postValue(State.Started)
         timer = object : TrainingTimer(exercises){
             override fun onTick(exercise: Exercise, millisUntilFinishedExercise: Long, order: Int) {
                 updateNotification(exercise, (millisUntilFinishedExercise / 1000).toInt())
@@ -104,12 +106,18 @@ class TrainingService: Service() {
 
             override fun onExerciseSwitch(prevExercise: Exercise, nextExercise: Exercise) {
                 exerciseDescription.postValue(nextExercise.description)
+
+            }
+
+            override fun onGoNext() {
+                currentState.postValue(State.GoNext)
             }
 
             override fun onFinish() {
                 stopTraining(trainingId)
                 timer.setOnExercise(0)
                 setNotificationButton(0, "Start", ServiceHelper.resumePendingIntent(this@TrainingService, trainingId))
+                currentState.postValue(State.Stopped)
             }
 
         }
@@ -117,13 +125,13 @@ class TrainingService: Service() {
     }
     private fun pauseTraining(trainingId: Int) {
         timer.pause()
-        currentState.value = State.Paused
+        currentState.postValue(State.Paused)
         setNotificationButton(0, "Resume",ServiceHelper.resumePendingIntent(this, trainingId))
     }
     private fun resumeTraining(trainingId: Int) {
         if (this::timer.isInitialized) {
             timer.resume()
-            currentState.value = State.Started
+            currentState.postValue(State.Started)
             setNotificationButton(0, "Pause",ServiceHelper.pausePendingIntent(this, trainingId))
         } else {
             startTraining(trainingId)
@@ -133,8 +141,12 @@ class TrainingService: Service() {
     private fun stopTraining(trainingId: Int) {
         timer.cancel()
         timer.setOnExercise(0)
-        currentState.value = State.Idle
+        currentState.postValue(State.Idle)
 
+    }
+    private fun goNextExerciseInTraining(trainingId: Int){
+        timer.goNextExercise()
+        currentState.postValue(State.GoNext)
     }
     private fun startForegroundService() {
         createNotificationChannel()

@@ -23,17 +23,11 @@ class PlayTrainingViewModel @Inject constructor(
     private val trainingRepository: ITrainingRepository,
     private val savedStateHandle: SavedStateHandle
 ): ViewModel() {
-    var exercises = ArrayList<Exercise>()
-        private set
-    var title = ""
-        private set
-    var remainingTime = 600
-        private set
     var currentExercise = MutableLiveData<Exercise>(null)
+    var remainingExercises = ArrayList<Exercise>()
         private set
     var training = MutableLiveData<Training>(null)
         private set
-
     private val _viewModelEvent = Channel<PlayTrainingViewModelEvent> { }
     val viewModelEvent = _viewModelEvent.receiveAsFlow()
 
@@ -43,24 +37,8 @@ class PlayTrainingViewModel @Inject constructor(
             viewModelScope.launch(Dispatchers.IO) {
                 trainingRepository.getTrainingWithId(trainingId)?.let { it ->
                     training.postValue(it)
-                    title = it.title
-                    val receivedExercises = exerciseRepository.getAllInTraining(it) as ArrayList<Exercise>
-                    var prevId: Int? = null
-                    while(receivedExercises.isNotEmpty()) {
-                        val ex = receivedExercises.find { ex -> ex.previousExerciseId == prevId }
-                        ex?.let { exercise ->
-                            prevId?.let {
-                                exercises.add(exercise)
-                            }?: run {
-                                currentExercise.postValue(exercise)
-                                remainingTime = exercise.duration
-                            }
-                            prevId = exercise.id
-                            receivedExercises.remove(ex)
-                        }
-
-                    }
-
+                    remainingExercises = exerciseRepository.getAllInTrainingByOrder(it.id) as ArrayList<Exercise>
+                    currentExercise.postValue(remainingExercises.removeAt(0))
                     sendEvent(PlayTrainingViewModelEvent.TrainingLoaded)
                 }
             }
@@ -70,8 +48,19 @@ class PlayTrainingViewModel @Inject constructor(
     fun onEvent(event: PlayTrainingEvent) {
         when(event){
             is PlayTrainingEvent.OnSkipClicked -> {
-                exercises.removeAt(event.position)
+                remainingExercises.removeAt(event.position)
                 sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(event.position))
+            }
+            is PlayTrainingEvent.OnGoNextExercise -> {
+                remainingExercises.removeAt(0)
+                sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(0))
+            }
+            is PlayTrainingEvent.OnTrainingEnded -> {
+                viewModelScope.launch(Dispatchers.IO) {
+                    remainingExercises = exerciseRepository.getAllInTrainingByOrder(training.value!!.id) as ArrayList<Exercise>
+                    currentExercise.postValue(remainingExercises.removeAt(0))
+                    sendEvent(PlayTrainingViewModelEvent.TrainingLoaded)
+                }
             }
         }
     }

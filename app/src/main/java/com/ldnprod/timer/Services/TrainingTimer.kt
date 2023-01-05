@@ -12,6 +12,7 @@ abstract class TrainingTimer(
 
     abstract fun onTick(exercise: Exercise, millisUntilFinishedExercise: Long, order: Int)
     abstract fun onExerciseSwitch(prevExercise: Exercise, nextExercise: Exercise)
+    abstract fun onGoNext()
     abstract fun onFinish()
 
     fun start() {
@@ -23,9 +24,14 @@ abstract class TrainingTimer(
         countDownTimer.cancel()
     }
 
-    private fun goNext() {
-        setOnExercise(counter + 1)
-        countDownTimer.start()
+    fun goNextExercise() {
+        if (counter < exercises.size - 1) {
+            onGoNext()
+            setOnExercise(counter + 1)
+            countDownTimer.start()
+        } else {
+            this@TrainingTimer.onFinish()
+        }
     }
 
     fun pause() {
@@ -52,11 +58,7 @@ abstract class TrainingTimer(
                 onTick(exercises[counter], millisUntilFinished, counter)
             }
             override fun onFinish() {
-                if (counter < exercises.size - 1) {
-                    goNext()
-                } else {
-                    this@TrainingTimer.onFinish()
-                }
+                goNextExercise()
             }
 
         }

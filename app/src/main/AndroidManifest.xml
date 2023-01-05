@@ -44,7 +44,8 @@
         <activity
             android:name=".TrainingInfoActivity"
             android:exported="false"
-            android:windowSoftInputMode="stateHidden">
+            android:windowSoftInputMode="stateHidden"
+            android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />

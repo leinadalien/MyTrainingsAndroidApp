@@ -13,7 +13,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.util.Collections
-import java.util.LinkedList
 import javax.inject.Inject
 
 @HiltViewModel
@@ -93,7 +92,7 @@ class TrainingViewModel @Inject constructor(
                                     ex -> exerciseRepository.delete(ex)
                                 }
                                 lazyDeletedExercises.clear()
-                                sendEvent(TrainingViewModelEvent.TrainingClosed(it))
+                                sendEvent(TrainingViewModelEvent.TrainingSaved(it))
                             }
                         }
                     }

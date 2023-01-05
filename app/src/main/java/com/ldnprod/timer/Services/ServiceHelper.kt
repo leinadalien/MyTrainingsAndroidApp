@@ -58,14 +58,15 @@ object ServiceHelper {
         )
     }
 
-//    fun nextExercisePendingIntent(context: Context): PendingIntent {
-//        val nextIntent = Intent(context, TrainingService::class.java).apply {
-//            putExtra(TRAINING_STATE, TrainingService.State.Started.name)
-//        }
-//        return PendingIntent.getService(
-//            context, NEXT_REQUEST_CODE, nextIntent, flag
-//        )
-//    }
+    fun nextExercisePendingIntent(context: Context, trainingId: Int): PendingIntent {
+        val nextIntent = Intent(context, TrainingService::class.java).apply {
+            putExtra(TRAINING_STATE, TrainingService.State.Started.name)
+            putExtra(TRAINING_ID, trainingId)
+        }
+        return PendingIntent.getService(
+            context, NEXT_REQUEST_CODE, nextIntent, flag
+        )
+    }
 
     fun triggerForegroundService(context: Context, action: String, trainingId: Int) {
         Intent(context, TrainingService::class.java).apply {
