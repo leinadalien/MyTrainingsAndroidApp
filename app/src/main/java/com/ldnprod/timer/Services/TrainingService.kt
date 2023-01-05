@@ -32,6 +32,8 @@ class TrainingService: Service() {
     lateinit var notificationBuilder: Builder
     @Inject
     lateinit var exerciseRepository: IExerciseRepository
+    @Inject
+    lateinit var trainingRepository: ITrainingRepository
 
     inner class TrainingBinder : Binder() {
         fun getService(): TrainingService = this@TrainingService
@@ -81,11 +83,17 @@ class TrainingService: Service() {
         return super.onStartCommand(intent, flags, startId)
     }
     private fun startTraining(trainingId: Int) {
-        setNotificationButton(0, "Pause",ServiceHelper.pausePendingIntent(this, trainingId))
-        startForegroundService()
         CoroutineScope(Dispatchers.IO).launch {
             exercises = exerciseRepository.getAllInTrainingByOrder(trainingId)
+            val training = trainingRepository.getTrainingWithId(trainingId)
+            training?.let {
+                notificationBuilder.setContentTitle(it.title).build()
+            }
         }
+
+        setNotificationButton(0, "Pause",ServiceHelper.pausePendingIntent(this, trainingId))
+        startForegroundService()
+
         notificationBuilder.setContentIntent(ServiceHelper.clickPendingIntent(applicationContext, trainingId)).build()
         currentState.value = State.Started
         timer = object : TrainingTimer(exercises){
