@@ -14,10 +14,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.ExercisePreviewAdapter
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_STOP
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_START
-import com.ldnprod.timer.Services.Constants.ACTION_SERVICE_PAUSE
-import com.ldnprod.timer.Services.Constants.TRAINING_ID
+import com.ldnprod.timer.Services.Constants.*
 import com.ldnprod.timer.Services.ServiceHelper
 import com.ldnprod.timer.Services.TrainingService
 import com.ldnprod.timer.ViewModels.PlayTrainingViewModel.PlayTrainingViewModelEvent
@@ -38,12 +35,17 @@ class PlayTrainingActivity : AppCompatActivity() {
             val binder = service as TrainingService.TrainingBinder
             trainingService = binder.getService()
             isBound = true
-            trainingService.remainingTime.observe(this@PlayTrainingActivity as LifecycleOwner) {
-                if (trainingService.currentState.value == TrainingService.State.Started) {
-                    binding.apply {
+            binding.apply {
+                trainingService.remainingTime.observe(this@PlayTrainingActivity as LifecycleOwner) {
+                    if (trainingService.currentState.value == TrainingService.State.Started) {
                         @SuppressLint("SetTextI18n")
                         remainingTimeTextview.text =
                             "${"%02d".format(it / 60)}:${"%02d".format(it % 60)}"
+                    }
+                }
+                trainingService.exerciseDescription.observe(this@PlayTrainingActivity as LifecycleOwner) {
+                    if (trainingService.currentState.value == TrainingService.State.Started) {
+                        exerciseTitle.text = it
                     }
                 }
             }
@@ -71,9 +73,8 @@ class PlayTrainingActivity : AppCompatActivity() {
                 ServiceHelper.triggerForegroundService(
                     this@PlayTrainingActivity,
                     if (trainingService.currentState.value == TrainingService.State.Started) ACTION_SERVICE_PAUSE
-                    else ACTION_SERVICE_START,
+                    else ACTION_SERVICE_RESUME,
                     viewModel.training.value!!.id,
-                    viewModel.currentExercise.value!!.id
                 )
 
             }
@@ -81,7 +82,6 @@ class PlayTrainingActivity : AppCompatActivity() {
                 ServiceHelper.triggerForegroundService(
                     this@PlayTrainingActivity, ACTION_SERVICE_STOP,
                     viewModel.training.value!!.id,
-                    viewModel.currentExercise.value!!.id
                 )
                 cancelButton.visibility = View.GONE
             }

@@ -30,6 +30,19 @@ class ExerciseRepository(
         return dao.getAllInTraining(training.id)
     }
 
+    override fun getAllInTrainingByOrder(trainingId: Int): List<Exercise> {
+        val receivedExercises = dao.getAllInTraining(trainingId) as ArrayList<Exercise>
+        val result = ArrayList<Exercise>()
+        var prevId: Int? = null
+        while(receivedExercises.isNotEmpty()) {
+            val ex = receivedExercises.find { ex -> ex.previousExerciseId == prevId }
+            prevId = ex?.id
+            result.add(ex!!)
+            receivedExercises.remove(ex)
+        }
+        return result
+    }
+
     override fun getById(id: Int): Exercise {
         return dao.getById(id)
     }
