@@ -37,9 +37,7 @@
         </activity>
 
         <service
-            android:name=".Services.TrainingService"
-            android:enabled="true"
-            android:exported="false" />
+            android:name=".Services.TrainingService"/>
 
         <activity
             android:name=".TrainingInfoActivity"

@@ -7,13 +7,16 @@ abstract class TrainingTimer(
     private val exercises: List<Exercise>
 ) {
     private lateinit var countDownTimer: CountDownTimer
-    private var counter = 0
-    private var remainingTime = exercises[0].duration * 1000L
-
+    var exerciseIndex = 0
+        private set
+    var remainingTimeOfCurrentExercise = exercises[0].duration * 1000L
+        private set
     abstract fun onTick(exercise: Exercise, millisUntilFinishedExercise: Long, order: Int)
     abstract fun onExerciseSwitch(prevExercise: Exercise, nextExercise: Exercise)
-    abstract fun onGoNext()
+    abstract fun onGoForward()
     abstract fun onFinish()
+
+
 
     fun start() {
         setOnExercise(0)
@@ -24,10 +27,10 @@ abstract class TrainingTimer(
         countDownTimer.cancel()
     }
 
-    fun goNextExercise() {
-        if (counter < exercises.size - 1) {
-            onGoNext()
-            setOnExercise(counter + 1)
+    fun goForward() {
+        if (exerciseIndex < exercises.size - 1) {
+            onGoForward()
+            setOnExercise(exerciseIndex + 1)
             countDownTimer.start()
         } else {
             this@TrainingTimer.onFinish()
@@ -39,13 +42,13 @@ abstract class TrainingTimer(
     }
 
     fun resume() {
-        setOnExercise(counter, remainingTime)
+        setOnExercise(exerciseIndex, remainingTimeOfCurrentExercise)
         countDownTimer.start()
     }
     fun setOnExercise(order: Int, timeLeft: Long = exercises[order].duration * 1000L) {
-        onExerciseSwitch(exercises[counter], exercises[order])
-        counter = order
-        remainingTime = timeLeft
+        onExerciseSwitch(exercises[exerciseIndex], exercises[order])
+        exerciseIndex = order
+        remainingTimeOfCurrentExercise = timeLeft
         if (this::countDownTimer.isInitialized) {
             countDownTimer.cancel()
         }
@@ -54,11 +57,11 @@ abstract class TrainingTimer(
     private fun setupTimer(timeLeft: Long) : CountDownTimer {
         return object : CountDownTimer(timeLeft, 1000) {
             override fun onTick(millisUntilFinished: Long) {
-                remainingTime = millisUntilFinished
-                onTick(exercises[counter], millisUntilFinished, counter)
+                remainingTimeOfCurrentExercise = millisUntilFinished
+                onTick(exercises[exerciseIndex], millisUntilFinished, exerciseIndex)
             }
             override fun onFinish() {
-                goNextExercise()
+                goForward()
             }
 
         }

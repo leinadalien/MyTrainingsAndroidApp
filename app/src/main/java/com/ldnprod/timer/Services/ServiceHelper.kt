@@ -4,17 +4,10 @@ import android.app.PendingIntent
 import android.app.TaskStackBuilder
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.ldnprod.timer.PlayTrainingActivity
 import com.ldnprod.timer.Services.Constants.*
 
 object ServiceHelper {
-//    private val flag =
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-//            PendingIntent.FLAG_IMMUTABLE
-//        else
-//            0
     private val flag = PendingIntent.FLAG_UPDATE_CURRENT
 
     fun clickPendingIntent(context: Context, trainingId: Int): PendingIntent {
@@ -38,9 +31,9 @@ object ServiceHelper {
         )
     }
 
-    fun resumePendingIntent(context: Context, trainingId: Int): PendingIntent {
+    fun playPendingIntent(context: Context, trainingId: Int): PendingIntent {
         val resumeIntent = Intent(context, TrainingService::class.java).apply {
-            putExtra(TRAINING_STATE, TrainingService.State.Resumed.name)
+            putExtra(TRAINING_STATE, TrainingService.State.Playing.name)
             putExtra(TRAINING_ID, trainingId)
         }
         return PendingIntent.getService(
@@ -60,7 +53,7 @@ object ServiceHelper {
 
     fun nextExercisePendingIntent(context: Context, trainingId: Int): PendingIntent {
         val nextIntent = Intent(context, TrainingService::class.java).apply {
-            putExtra(TRAINING_STATE, TrainingService.State.Started.name)
+            putExtra(TRAINING_STATE, TrainingService.State.Playing.name)
             putExtra(TRAINING_ID, trainingId)
         }
         return PendingIntent.getService(
