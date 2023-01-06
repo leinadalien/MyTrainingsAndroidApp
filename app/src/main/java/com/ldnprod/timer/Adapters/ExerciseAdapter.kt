@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.ldnprod.timer.Entities.Exercise
@@ -16,7 +17,7 @@ import com.ldnprod.timer.ViewModels.TrainingViewModel.TrainingViewModel
 class ExerciseAdapter(var exercises: List<Exercise>, private val onEvent: (TrainingEvent) -> Unit):RecyclerView.Adapter<ExerciseAdapter.ExerciseViewHolder>() {
     inner class ExerciseViewHolder(val view: View) : RecyclerView.ViewHolder(view){
         val title: TextView = view.findViewById(R.id.exercise_title)
-        val deleteButton: Button = view.findViewById(R.id.delete_exercise_button)
+        val deleteButton: ImageButton = view.findViewById(R.id.delete_exercise_button)
         val durationTextView: TextView = view.findViewById(R.id.exercise_duration_textview)
     }
 

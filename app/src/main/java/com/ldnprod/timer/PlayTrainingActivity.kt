@@ -59,6 +59,7 @@ class PlayTrainingActivity : AppCompatActivity() {
                             }
                             TrainingService.State.ChangedTraining.name -> {
                                 viewModel.onEvent(PlayTrainingEvent.OnTrainingChanged(trainingId))
+                                //setButtons(R.drawable.ic_pause, View.VISIBLE)
                             }
                         }
                     }
@@ -125,7 +126,7 @@ class PlayTrainingActivity : AppCompatActivity() {
             }
             viewModel.training.observe(this@PlayTrainingActivity as LifecycleOwner) {
                 it?.let { training ->
-                    trainingTitle.text = training.title
+                    this@PlayTrainingActivity.title = training.title
                 }
             }
         }
@@ -138,6 +139,7 @@ class PlayTrainingActivity : AppCompatActivity() {
                     is PlayTrainingViewModelEvent.TrainingLoaded -> {
                         exerciseAdapter.exercises = viewModel.remainingExercises
                         exerciseAdapter.notifyDataSetChanged()
+
                     }
                 }
             }

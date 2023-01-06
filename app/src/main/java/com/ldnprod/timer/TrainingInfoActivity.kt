@@ -1,5 +1,7 @@
 package com.ldnprod.timer
 
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -33,7 +35,8 @@ class TrainingInfoActivity : AppCompatActivity() {
         binding = ActivityTrainingInfoBinding.inflate(layoutInflater)
         setContentView(binding.root)
         exerciseAdapter = ExerciseAdapter(viewModel.exercises) { viewModel.onEvent(it) }
-
+        title = resources.getString(R.string.training_details)
+        actionBar?.setBackgroundDrawable(ColorDrawable(Color.parseColor("#FFFFFF")))
         binding.apply {
             createButton
                 .setOnClickListener {

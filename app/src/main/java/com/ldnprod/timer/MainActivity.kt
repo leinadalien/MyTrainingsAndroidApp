@@ -1,9 +1,17 @@
 package com.ldnprod.timer
 
+import android.annotation.SuppressLint
+import android.app.UiModeManager
 import android.content.Intent
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.ldnprod.timer.Adapters.TrainingAdapter
@@ -13,6 +21,7 @@ import com.ldnprod.timer.ViewModels.TrainingListViewModel.TrainingListViewModel
 import com.ldnprod.timer.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlin.coroutines.Continuation
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
@@ -61,6 +70,33 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+    private lateinit var changeDarkModeButton: MenuItem
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        changeDarkModeButton = menu!!.findItem(R.id.change_theme_action)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.change_theme_action -> {
+                if (AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_YES){
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    changeDarkModeButton.setIcon(R.drawable.ic_dark_mode)
+                    changeDarkModeButton.setTitle(R.string.dark_mode)
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    changeDarkModeButton.setIcon(R.drawable.ic_light_mode)
+                    changeDarkModeButton.setTitle(R.string.light_mode)
+                }
+                true
+            }
+            else -> {
+                super.onOptionsItemSelected(item)
+            }
+        }
+
     }
 
     override fun onStart() {
