@@ -6,10 +6,9 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Binder
 import android.os.Build
-import android.os.Handler
-import android.os.HandlerThread
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.Builder
@@ -17,6 +16,7 @@ import androidx.lifecycle.MutableLiveData
 import com.ldnprod.timer.Entities.Exercise
 import com.ldnprod.timer.Interfaces.IExerciseRepository
 import com.ldnprod.timer.Interfaces.ITrainingRepository
+import com.ldnprod.timer.R
 import com.ldnprod.timer.Services.Constants.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
@@ -37,6 +37,8 @@ class TrainingService: Service() {
     @Inject
     lateinit var trainingRepository: ITrainingRepository
 
+    private lateinit var doneSoundPlayer: MediaPlayer
+    private lateinit var prepareSoundPlayer: MediaPlayer
     inner class TrainingBinder : Binder() {
         fun getService(): TrainingService = this@TrainingService
     }
@@ -45,7 +47,11 @@ class TrainingService: Service() {
     }
     private val binder = TrainingBinder()
     private lateinit var timer: TrainingTimer
-
+    override fun onCreate() {
+        super.onCreate()
+        doneSoundPlayer = MediaPlayer.create(this@TrainingService, R.raw.done_sound)
+        prepareSoundPlayer = MediaPlayer.create(this@TrainingService, R.raw.prepare_sound)
+    }
     var remainingTime = MutableLiveData(0)
         private set
     var currentState = MutableLiveData(State.Idle)
@@ -109,6 +115,9 @@ class TrainingService: Service() {
             override fun onTick(exercise: Exercise, millisUntilFinishedExercise: Long, order: Int) {
                 updateNotification(exercise, (millisUntilFinishedExercise / 1000).toInt())
                 remainingTime.postValue((millisUntilFinishedExercise / 1000).toInt())
+                if (millisUntilFinishedExercise in 0..2999) {
+                    prepareSoundPlayer.start()
+                }
             }
 
             override fun onExerciseSwitch(prevExercise: Exercise, nextExercise: Exercise) {
@@ -116,12 +125,14 @@ class TrainingService: Service() {
             }
 
             override fun onGoForward() {
+                doneSoundPlayer.start()
                 this@TrainingService.currentExercise.postValue(exercises[exerciseIndex + 1])
                 currentState.postValue(State.Forwarded)
             }
 
             override fun onFinish() {
                 stopTraining()
+                doneSoundPlayer.start()
                 timer.setOnExercise(0)
                 currentExercise.postValue(exercises[0])
                 setNotificationButton(0, "Start", ServiceHelper.playPendingIntent(this@TrainingService, trainingId))

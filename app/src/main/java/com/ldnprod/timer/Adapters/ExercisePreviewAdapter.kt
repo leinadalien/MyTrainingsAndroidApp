@@ -16,7 +16,6 @@ class ExercisePreviewAdapter(var exercises: List<Exercise>, private val onEvent:
     inner class ExercisePreviewViewHolder(val view: View) : RecyclerView.ViewHolder(view){
         val title: TextView = view.findViewById(R.id.exercise_title)
         val durationTextView: TextView = view.findViewById(R.id.exercise_duration_textview)
-        val skipButton: Button = view.findViewById(R.id.skip_exercise_button)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExercisePreviewViewHolder {
@@ -30,8 +29,6 @@ class ExercisePreviewAdapter(var exercises: List<Exercise>, private val onEvent:
         holder.apply {
             title.text = exercise.description
             durationTextView.text = "${"%02d".format(exercise.duration / 60)}:${"%02d".format(exercise.duration % 60)}"
-
-            skipButton.setOnClickListener { onEvent(PlayTrainingEvent.OnSkipClicked(position)) }
         }
     }
 
