@@ -41,7 +41,7 @@ class TrainingService: Service() {
         fun getService(): TrainingService = this@TrainingService
     }
     enum class State {
-        Idle, Playing, Paused, Stopped, Forwarded
+        Idle, Playing, Paused, Stopped, Forwarded, ChangedTraining
     }
     private val binder = TrainingBinder()
     private lateinit var timer: TrainingTimer
@@ -147,8 +147,8 @@ class TrainingService: Service() {
                 setNotificationButton(0, "Pause",ServiceHelper.pausePendingIntent(this, trainingId))
             } else {
                 stopTraining()
-                currentState.postValue(State.Idle)
                 startTraining(trainingId)
+                currentState.postValue(State.ChangedTraining)
             }
         } else {
             startTraining(trainingId)

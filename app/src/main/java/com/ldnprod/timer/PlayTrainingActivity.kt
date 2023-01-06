@@ -46,7 +46,6 @@ class PlayTrainingActivity : AppCompatActivity() {
                             }
                             TrainingService.State.Playing.name -> {
                                 setButtons(R.drawable.ic_pause, View.VISIBLE)
-                                viewModel.onEvent(PlayTrainingEvent.OnTrainingChanged(viewModel.training.value!!.id))
                             }
                             TrainingService.State.Paused.name -> {
                                 setButtons(R.drawable.ic_play, View.VISIBLE)
@@ -57,6 +56,9 @@ class PlayTrainingActivity : AppCompatActivity() {
                             }
                             TrainingService.State.Forwarded.name -> {
                                 setButtons(R.drawable.ic_pause, View.VISIBLE)
+                            }
+                            TrainingService.State.ChangedTraining.name -> {
+                                viewModel.onEvent(PlayTrainingEvent.OnTrainingChanged(trainingId))
                             }
                         }
                     }
