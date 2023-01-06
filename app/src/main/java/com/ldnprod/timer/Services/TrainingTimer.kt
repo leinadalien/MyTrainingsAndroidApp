@@ -24,6 +24,8 @@ abstract class TrainingTimer(
     }
 
     fun cancel() {
+        exerciseIndex = 0
+        remainingTimeOfCurrentExercise = exercises[0].duration * 1000L
         countDownTimer.cancel()
     }
 
@@ -34,6 +36,7 @@ abstract class TrainingTimer(
             countDownTimer.start()
         } else {
             this@TrainingTimer.onFinish()
+
         }
     }
 

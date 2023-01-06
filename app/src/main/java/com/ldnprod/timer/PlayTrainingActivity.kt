@@ -43,26 +43,29 @@ class PlayTrainingActivity : AppCompatActivity() {
                             TrainingService.State.Idle.name -> {
                                 setButtons(R.drawable.ic_play, View.GONE)
                                 viewModel.onEvent(PlayTrainingEvent.OnTrainingEnded)
-                                updateView()
                             }
                             TrainingService.State.Playing.name -> {
                                 setButtons(R.drawable.ic_pause, View.VISIBLE)
-                                updateView()
+                                viewModel.onEvent(PlayTrainingEvent.OnTrainingChanged(viewModel.training.value!!.id))
                             }
                             TrainingService.State.Paused.name -> {
                                 setButtons(R.drawable.ic_play, View.VISIBLE)
-                                updateView()
                             }
                             TrainingService.State.Stopped.name -> {
                                 setButtons(R.drawable.ic_play, View.VISIBLE)
                                 viewModel.onEvent(PlayTrainingEvent.OnTrainingEnded)
-                                updateView()
                             }
                             TrainingService.State.Forwarded.name -> {
                                 setButtons(R.drawable.ic_pause, View.VISIBLE)
-                                viewModel.onEvent(PlayTrainingEvent.GoToExercise(trainingService.exerciseIndex.value!! + 1))
                             }
                         }
+                    }
+                    trainingService.currentExercise.observe(this@PlayTrainingActivity as LifecycleOwner) {
+                        it?.let { exercise ->
+                            binding.exerciseTitle.text = exercise.description
+                            viewModel.onEvent(PlayTrainingEvent.OnExerciseAchieved(exercise))
+                        }
+
                     }
                     trainingService.remainingTime.observe(this@PlayTrainingActivity as LifecycleOwner) {
                         if (trainingService.isPlaying.value!!) {
@@ -93,7 +96,9 @@ class PlayTrainingActivity : AppCompatActivity() {
             startPauseButton.setOnClickListener {
                 ServiceHelper.triggerForegroundService(
                     this@PlayTrainingActivity,
-                    if (trainingService.isPlaying.value!! && trainingService.trainingId.value == viewModel.training.value!!.id) ACTION_SERVICE_PAUSE
+                    if (trainingService.isPlaying.value!!
+                        && trainingService.trainingId.value == viewModel.training.value!!.id)
+                        ACTION_SERVICE_PAUSE
                     else ACTION_SERVICE_PLAY,
                     viewModel.training.value!!.id,
                 )
@@ -107,10 +112,19 @@ class PlayTrainingActivity : AppCompatActivity() {
                 stopButton.visibility = View.GONE
             }
             stopButton.visibility = View.GONE
-        }
-        viewModel.currentExercise.observe(this as LifecycleOwner) {
-            it?.let { exercise ->
-                binding.exerciseTitle.text = exercise.description
+            viewModel.currentExercise.observe(this@PlayTrainingActivity as LifecycleOwner) {
+                it?.let { exercise ->
+                    @SuppressLint("SetTextI18n")
+                    remainingTimeTextview.text =
+                        "${"%02d".format(exercise.duration / 60)}:${
+                            "%02d".format(exercise.duration % 60)}"
+                    exerciseTitle.text = exercise.description
+                }
+            }
+            viewModel.training.observe(this@PlayTrainingActivity as LifecycleOwner) {
+                it?.let { training ->
+                    trainingTitle.text = training.title
+                }
             }
         }
         lifecycleScope.launch {
@@ -120,21 +134,12 @@ class PlayTrainingActivity : AppCompatActivity() {
                         exerciseAdapter.notifyItemRemoved(event.position)
                     }
                     is PlayTrainingViewModelEvent.TrainingLoaded -> {
-                        binding.apply {
-                            trainingTitle.text = viewModel.training.value!!.title
-                            @SuppressLint("SetTextI18n")
-                            remainingTimeTextview.text =
-                                "${"%02d".format(viewModel.currentExercise.value!!.duration / 60)}:${
-                                    "%02d".format(viewModel.currentExercise.value!!.duration % 60)
-                                }"
-                        }
                         exerciseAdapter.exercises = viewModel.remainingExercises
                         exerciseAdapter.notifyDataSetChanged()
                     }
                 }
             }
         }
-
     }
 
     override fun onStart() {
@@ -153,18 +158,6 @@ class PlayTrainingActivity : AppCompatActivity() {
         binding.apply {
             startPauseButton.setImageResource(startButtonResource)
             stopButton.visibility = stopButtonVisibility
-        }
-    }
-    private fun updateView(){
-        binding.apply {
-            @SuppressLint("SetTextI18n")
-            remainingTimeTextview.text =
-                "${"%02d".format(trainingService.remainingTime.value!! / 60)}:${
-                    "%02d".format(trainingService.remainingTime.value!! % 60)
-                }"
-            exerciseTitle.text = viewModel.currentExercise.value!!.description
-            exerciseAdapter.exercises = viewModel.remainingExercises
-            exerciseAdapter.notifyDataSetChanged()
         }
     }
 }

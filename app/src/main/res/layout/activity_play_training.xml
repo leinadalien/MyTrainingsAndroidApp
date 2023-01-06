@@ -10,28 +10,28 @@
         android:id="@+id/training_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="Training title"
         android:textColor="@color/black"
         android:textSize="50sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Training title" />
 
     <TextView
         android:id="@+id/exercise_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="25dp"
-        tools:text="Exercise title"
         android:textColor="@color/black"
         android:textSize="30sp"
         app:layout_constraintBottom_toTopOf="@+id/upcoming_exercises_recycler_view"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Exercise title" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/upcoming_exercises_recycler_view"
-        android:layout_width="409dp"
+        android:layout_width="0dp"
         android:layout_height="300dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -66,10 +66,10 @@
         android:id="@+id/remaining_time_textview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:text="10:00"
         android:textSize="70sp"
         app:layout_constraintBottom_toTopOf="@+id/exercise_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/training_title" />
+        app:layout_constraintTop_toBottomOf="@+id/training_title"
+        tools:text="10:00" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -56,14 +56,29 @@ class PlayTrainingViewModel @Inject constructor(
                 remainingExercises.removeAt(event.position)
                 sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(event.position))
             }
-            is PlayTrainingEvent.GoToExercise -> {
-                if (currentExercise.value != exercises[event.position]) {
-                    while (remainingExercises[0].id != exercises[event.position].id) {
-                        remainingExercises.removeAt(0)
+            is PlayTrainingEvent.OnExerciseAchieved -> {
+                if (currentExercise.value != event.exercise) {
+                    var counter = achieveExercise(event.exercise)
+                    if (remainingExercises.isNotEmpty()) {
+                        for(i in IntRange(1, counter)) {
+                            sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(0))
+                        }
+                        currentExercise.postValue(remainingExercises.removeAt(0))
                         sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(0))
+                    } else {
+                        exercises.forEach {
+                            remainingExercises.add(it)
+                        }
+                        sendEvent(PlayTrainingViewModelEvent.TrainingLoaded)
+                        counter = achieveExercise(event.exercise)
+                        if (remainingExercises.isNotEmpty()) {
+                            for(i in IntRange(1, counter)) {
+                                sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(0))
+                            }
+                            currentExercise.postValue(remainingExercises.removeAt(0))
+                            sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(0))
+                        }
                     }
-                    currentExercise.postValue(remainingExercises.removeAt(0))
-                    sendEvent(PlayTrainingViewModelEvent.ExerciseDeleted(0))
                 }
             }
             is PlayTrainingEvent.OnTrainingEnded -> {
@@ -74,11 +89,32 @@ class PlayTrainingViewModel @Inject constructor(
                 currentExercise.postValue(remainingExercises.removeAt(0))
                 sendEvent(PlayTrainingViewModelEvent.TrainingLoaded)
             }
+            is PlayTrainingEvent.OnTrainingChanged -> {
+                if (event.trainingId != 0) {
+                    viewModelScope.launch(Dispatchers.IO) {
+                        exercises = exerciseRepository.getAllInTrainingByOrder(event.trainingId) as ArrayList<Exercise>
+                        remainingExercises.clear()
+                        exercises.forEach {
+                            remainingExercises.add(it)
+                        }
+                        currentExercise.postValue(remainingExercises.removeAt(0))
+                        sendEvent(PlayTrainingViewModelEvent.TrainingLoaded)
+                    }
+                }
+            }
         }
     }
     private fun sendEvent(event: PlayTrainingViewModelEvent) {
         viewModelScope.launch {
             _viewModelEvent.send(event)
         }
+    }
+    private fun achieveExercise(exercise: Exercise) : Int{
+        var counter = 0
+        while (remainingExercises.size > 0 && remainingExercises[0] != exercise) {
+            remainingExercises.removeAt(0)
+            counter++
+        }
+        return counter
     }
 }

@@ -54,21 +54,22 @@ class TrainingService: Service() {
         private set
     var trainingId = MutableLiveData(0)
         private set
-    var exerciseIndex = MutableLiveData(0)
     lateinit var exercises: List<Exercise>
         private set
+    var currentExercise = MutableLiveData<Exercise>(null)
 
     override fun onBind(intent: Intent?) = binder
 
     @RequiresApi(Build.VERSION_CODES.N)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         intent?.let {
-            val trainingId = it.getIntExtra(TRAINING_ID, -1)!!
+            val trainingId = it.getIntExtra(TRAINING_ID, -1)
             when(it.getStringExtra(TRAINING_STATE)) {
                 State.Playing.name -> playTraining(trainingId)
                 State.Paused.name -> pauseTraining()
                 State.Stopped.name -> {
                     stopTraining()
+                    currentState.postValue(State.Idle)
                     stopForegroundService()
                 }
                 State.Forwarded.name -> goNextExerciseInTraining(trainingId)
@@ -79,6 +80,7 @@ class TrainingService: Service() {
                 ACTION_SERVICE_PLAY -> playTraining(trainingId)
                 ACTION_SERVICE_STOP ->  {
                     stopTraining()
+                    currentState.postValue(State.Idle)
                     stopForegroundService()
                 }
                 ACTION_SERVICE_NEXT -> goNextExerciseInTraining(trainingId)
@@ -89,13 +91,13 @@ class TrainingService: Service() {
     private fun startTraining(trainingId: Int) {
         isPlaying.postValue(true)
         this.trainingId.postValue(trainingId)
-
         CoroutineScope(Dispatchers.IO).launch {
             exercises = exerciseRepository.getAllInTrainingByOrder(trainingId)
             val training = trainingRepository.getTrainingWithId(trainingId)
             training?.let {
                 notificationBuilder.setContentTitle(it.title).build()
             }
+            currentExercise.postValue(exercises[0])
         }
 
         setNotificationButton(0, "Pause",ServiceHelper.pausePendingIntent(this, trainingId))
@@ -110,20 +112,21 @@ class TrainingService: Service() {
             }
 
             override fun onExerciseSwitch(prevExercise: Exercise, nextExercise: Exercise) {
-                this@TrainingService.exerciseIndex.postValue(exerciseIndex)
+                this@TrainingService.currentExercise.postValue(nextExercise)
             }
 
             override fun onGoForward() {
-                this@TrainingService.exerciseIndex.postValue(exerciseIndex)
+                this@TrainingService.currentExercise.postValue(exercises[exerciseIndex + 1])
                 currentState.postValue(State.Forwarded)
             }
 
             override fun onFinish() {
                 stopTraining()
                 timer.setOnExercise(0)
+                currentExercise.postValue(exercises[0])
                 setNotificationButton(0, "Start", ServiceHelper.playPendingIntent(this@TrainingService, trainingId))
-                currentState.postValue(State.Stopped)
-                isPlaying.postValue(false)
+                remainingTime.postValue(exercises[0].duration)
+                updateNotification(exercises[0], exercises[0].duration)
             }
 
         }
@@ -137,13 +140,14 @@ class TrainingService: Service() {
     }
     private fun playTraining(trainingId: Int) {
         if (this::timer.isInitialized) {
-            if (trainingId == this.trainingId.value){
+            if (trainingId == this.trainingId.value) {
                 isPlaying.postValue(true)
                 timer.resume()
                 currentState.postValue(State.Playing)
                 setNotificationButton(0, "Pause",ServiceHelper.pausePendingIntent(this, trainingId))
             } else {
                 stopTraining()
+                currentState.postValue(State.Idle)
                 startTraining(trainingId)
             }
         } else {
@@ -154,9 +158,7 @@ class TrainingService: Service() {
     private fun stopTraining() {
         isPlaying.postValue(false)
         timer.cancel()
-        timer.setOnExercise(0)
-        remainingTime.postValue(timer.remainingTimeOfCurrentExercise.toInt() / 1000)
-        currentState.postValue(State.Idle)
+        currentState.postValue(State.Stopped)
     }
     private fun goNextExerciseInTraining(trainingId: Int){
         timer.goForward()
