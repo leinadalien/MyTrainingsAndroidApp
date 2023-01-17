@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace 'com.ldnprod.timer'
+    namespace 'com.ldnprod.mytrainings'
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.ldnprod.timer"
+        applicationId "com.ldnprod.mytrainings"
         minSdk 21
         targetSdk 33
         versionCode 1
